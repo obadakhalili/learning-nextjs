@@ -12,6 +12,13 @@ export default function LabIndexPage() {
 
       <ul className="space-y-2 text-sm">
         <li>
+          <Link className="text-blue-700 underline" href="/lab/account">
+            /lab/account
+          </Link>{" "}
+          and <code>/lab/billing</code> are inside a <code>(workspace)</code> route group and share
+          group layout/template without adding <code>workspace</code> to the URL.
+        </li>
+        <li>
           <Link className="text-blue-700 underline" href="/lab/gallery">
             /lab/gallery
           </Link>{" "}

@@ -170,6 +170,18 @@
   - There is no "optional single non-catch-all" bracket form.
     - model it with route structure (for example `page.tsx` + `[slug]/page.tsx`).
 
+- `(group)` vs `_folder`
+  - `(group)` is a non-URL route-tree segment.
+  - Children under it get shared routing behavior from group-level files:
+    - `layout.tsx`, `template.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`
+  - Example in project:
+    - `src/app/lab/(workspace)/account/page.tsx` -> `/lab/account`
+    - `src/app/lab/(workspace)/billing/page.tsx` -> `/lab/billing`
+    - both share `src/app/lab/(workspace)/layout.tsx` and `src/app/lab/(workspace)/template.tsx`
+  - `_folder` (like `_components`, `_data`) is just filesystem colocation.
+    - router ignores it for matching
+    - useful for shared code/modules near the routes
+
 - Server layout + client-only dynamic extraction
   - Active tab highlighting needed `usePathname()` (client hook).
   - Instead of making all of `/lab/layout.tsx` client-side, only nav was extracted:
