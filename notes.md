@@ -209,6 +209,20 @@
     - `[slug]/loading.tsx` is shown
     - new slug page replaces loading when ready
 
+- Why template remount does not automatically show loading
+  - Key phrasing:
+    - `template` = when remount should happen
+    - `loading` = what can be committed while remount target is still pending
+  - A/B model for navigation:
+    - `A` = current committed UI (still visible)
+    - `B` = next tree built in background
+  - Example:
+    - `/lab/account` -> `/lab/billing` inside `(workspace)`
+    - template key changes in `B`
+    - if no loading boundary at that cut, `B` cannot commit an intermediate fallback there
+    - so `A` stays visible until `B` resolves
+    - then one commit swaps `A -> B`
+
 - `not-found.tsx` mental model (route 404 vs resource 404)
   - `notFound()` from `next/navigation` throws a special internal 404 signal.
   - Next catches that signal and renders nearest segment `not-found.tsx`.
