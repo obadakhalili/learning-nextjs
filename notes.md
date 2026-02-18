@@ -276,6 +276,7 @@
 
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
+  - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
   - Learn how Next.js App Router concepts map to browser Network tab behavior:
     - hard load vs soft navigation requests
     - HTML vs RSC payload vs JS/CSS chunks
