@@ -264,3 +264,4 @@
 
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
+  - Learn about SEO features in nextjs
