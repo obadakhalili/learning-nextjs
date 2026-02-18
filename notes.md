@@ -152,13 +152,31 @@
     - `@slot` is part of the route tree, but not a URL path segment
 
 - Server layout + client-only dynamic extraction
-  - Active tab highlighting needed `usePathname()`, which is a client hook.
-  - Keeping `/lab/layout.tsx` as a Server Component preserves server-first rendering/caching behavior for the layout.
-  - Only the nav was moved into a small Client Component (`app/lab/_components/lab-nav.tsx`).
-  - "Got it" framing:
-    - keep `/lab` layout in app router cache path
-    - move out only the part that requires client execution
-    - this minimizes shipped client JS compared to making the whole layout client-side
+  - Active tab highlighting needed `usePathname()` (client hook).
+  - Instead of making all of `/lab/layout.tsx` client-side, only nav was extracted:
+    - `app/lab/_components/lab-nav.tsx` (Client Component)
+  - Result:
+    - `/lab/layout.tsx` stays server-side
+    - only nav logic runs on client
+    - less client JS shipped
+
+- Slug-to-slug loading behavior + fix
+  - Observed:
+    - first visit to `/lab/demo/slow` showed loading
+    - after it resolved, navigating to `/lab/demo/missing` waited ~1200ms
+    - during that wait, loading did not show again
+  - Why this happens:
+    - this is slug -> slug inside the same route branch
+    - Next keeps current UI visible during transition instead of flashing fallback
+  - Fix applied:
+    - `app/lab/demo/[slug]/loading.tsx`
+    - `app/lab/demo/[slug]/template.tsx`
+  - Mental model after fix:
+    - slug changes
+    - `[slug]/template.tsx` remounts that subtree
+    - subtree is pending again
+    - `[slug]/loading.tsx` is shown
+    - new slug page replaces loading when ready
 
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
