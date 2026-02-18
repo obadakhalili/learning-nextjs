@@ -280,3 +280,4 @@
     - where streaming appears in network timing/waterfall
   - Learn about SEO features in nextjs
   - Why nextjs?
+  - what is hydration?
