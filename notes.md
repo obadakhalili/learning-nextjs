@@ -1,0 +1,94 @@
+- Route wrappers: `layout.tsx` vs `template.tsx`
+  - `layout.tsx` is the persistent wrapper for a segment.
+  - `template.tsx` is the reset wrapper; it remounts on child-route navigation.
+  - Important correction:
+    - `layout.tsx` is not "never re-render".
+    - It is usually reused across child-route transitions, but can still update/re-enter/reload.
+  - Drawing:
+    - navigate `/dashboard/a` -> `/dashboard/b`
+    - `layout.tsx`: stays mounted (usually reused)
+    - `template.tsx`: remounts
+    - `page.tsx`: remounts
+
+- Why `params` is a Promise
+  - Promise here is a rendering signal, not a URL parsing cost issue.
+  - It marks: "request-scoped data is consumed here."
+  - Request data includes:
+    - `params`
+    - `searchParams`
+    - `cookies`
+    - `headers`
+    - session/user-request-specific values
+
+- Tree mental model
+  - Next builds:
+    - segment tree -> component tree -> render work tree
+  - A page is not treated as one indivisible block.
+  - Rendering decisions happen per subtree/boundary.
+  - Drawing:
+    - `Segment tree -> Component tree -> Render work tree`
+    - `(static-safe regions vs request-dependent regions)`
+
+- What makes a subtree dynamic
+  - Dynamic-ness comes from data access, not from Suspense itself.
+  - Useful framing:
+    - calls inside components make subtree data-dependent
+    - nearest parent Suspense is usually where the streaming cut happens
+  - Drawing:
+    - `Parent`
+    - `|- Static UI`
+    - ``- Suspense(fallback)`
+    - `   \- subtree reads cookies()/request data`
+
+- Dynamic holes (key correction)
+  - Dynamic hole does NOT mean client component.
+  - `cookies()` is server-only and request-dependent.
+  - Using `cookies()` creates request-time server rendering for that subtree.
+  - Client rendering only happens with `'use client'`.
+
+- Prerender + request timeline
+  - Prerender is a real server render pass (not only compile-time static analysis).
+  - It runs at build/revalidation time for eligible routes.
+  - On request:
+    - ready shell/fallback can be sent first
+    - dynamic boundary results are streamed later
+  - Drawing:
+    - `t0: shell + fallback`
+    - `t1: dynamic subtree chunk arrives`
+    - `t2: browser swaps fallback -> resolved UI`
+
+- Cache layers
+  - Full Route Cache:
+    - reusable prerendered route output artifacts
+  - Data Cache:
+    - cached `fetch` results based on policy (`revalidate`, etc)
+  - Router Cache:
+    - client-side cache of RSC payload for navigations
+  - Dynamic subtree can still benefit from Data Cache.
+
+- ISR + invalidation
+  - ISR = Incremental Static Regeneration.
+  - Cached prerendered output can be refreshed when stale/invalidated.
+  - Static does not mean forever; it means reusable until revalidated/invalidated.
+
+- Why not every route is build-prerendered
+  - Some routes render first at request time (request-dependent/dynamic behavior).
+  - Dynamic tracking works in both prerender mode and request mode.
+
+- AsyncLocalStorage mental model
+  - AsyncLocalStorage is request/render-local context storage across async execution.
+  - Deep code can read current mode/context without manually passing args everywhere.
+  - "Async" matters because context survives across `await`.
+  - Drawing:
+    - set context (`mode=request/prerender/cache`)
+    - render tree
+    - deep helper
+    - `await`
+    - deep helper still sees same context
+
+- Mode-dependent behavior
+  - The same API access can produce different behavior depending on mode:
+    - `request`: allow per-request rendering
+    - `prerender`/PPR: postpone/suspend and create dynamic holes
+    - cache scope: error for forbidden dynamic reads
+    - legacy/static contexts: bailout behavior
