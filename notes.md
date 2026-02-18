@@ -150,3 +150,15 @@
     - non-URL structural node: `@slot`, `(group)`
   - Final wording that clicked:
     - `@slot` is part of the route tree, but not a URL path segment
+
+- Server layout + client-only dynamic extraction
+  - Active tab highlighting needed `usePathname()`, which is a client hook.
+  - Keeping `/lab/layout.tsx` as a Server Component preserves server-first rendering/caching behavior for the layout.
+  - Only the nav was moved into a small Client Component (`app/lab/_components/lab-nav.tsx`).
+  - "Got it" framing:
+    - keep `/lab` layout in app router cache path
+    - move out only the part that requires client execution
+    - this minimizes shipped client JS compared to making the whole layout client-side
+
+- TODO
+  - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
