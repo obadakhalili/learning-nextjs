@@ -281,3 +281,4 @@
   - Learn about SEO features in nextjs
   - Why nextjs?
   - what is hydration?
+  - how does react transition works
