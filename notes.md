@@ -273,5 +273,10 @@
 
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
+  - Learn how Next.js App Router concepts map to browser Network tab behavior:
+    - hard load vs soft navigation requests
+    - HTML vs RSC payload vs JS/CSS chunks
+    - prerendered static response vs request-time dynamic render
+    - where streaming appears in network timing/waterfall
   - Learn about SEO features in nextjs
   - Why nextjs?
