@@ -105,3 +105,48 @@
     - `prerender`/PPR: postpone/suspend and create dynamic holes
     - cache scope: error for forbidden dynamic reads
     - legacy/static contexts: bailout behavior
+
+- Parallel routes and slot mental model
+  - App Router is a tree of route segments.
+  - Some special route-tree nodes do not map to URL path segments.
+  - `@slot` is one of those special nodes:
+    - it creates a parallel rendering branch under the same route
+    - it does not appear in the URL
+  - Layout receives:
+    - main branch as `props.children`
+    - each slot as `props.slotName` (example: `@inspector` -> `props.inspector`)
+  - "Got it" framing:
+    - slots are a way to render multiple branches under the same route
+    - layout gets main branch + slot branches as props
+
+- `template.tsx` vs slot content
+  - `template.tsx` belongs to the segment level.
+  - It is not only for `children`; it applies at that segment boundary where parallel branches are rendered.
+  - This is why slot area can show template wrapper content too.
+  - Drawing:
+    ```text
+    /lab segment
+    ├─ children  -> wrapped by lab/template.tsx
+    └─ inspector -> wrapped by lab/template.tsx
+    ```
+
+- `default.tsx` vs `page.tsx` inside a slot
+  - `@inspector/page.tsx`:
+    - matched slot content when slot has a route match at that URL level
+  - `@inspector/default.tsx`:
+    - fallback for that slot when no matching slot branch exists for current URL
+  - Not equivalent:
+    - renaming `default.tsx` to `page.tsx` changes behavior
+    - you gain root match behavior but lose unmatched fallback behavior
+  - Scope clarification:
+    - `app/lab/@inspector/default.tsx` is "global" only within `/lab` for the `inspector` slot
+    - it is not global for `children` or other slots
+
+- Terminology precision that avoids confusion
+  - Broad conversational use:
+    - "segment" can refer to route-tree pieces
+  - Precise use:
+    - URL/path segment: URL-matching part (`lab`, `demo`, `[slug]`)
+    - non-URL structural node: `@slot`, `(group)`
+  - Final wording that clicked:
+    - `@slot` is part of the route tree, but not a URL path segment
