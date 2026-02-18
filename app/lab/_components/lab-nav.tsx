@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = ["/lab", "/lab/demo/slow", "/lab/demo/missing", "/lab/demo/error"] as const;
+const links = ["/lab", "/lab/gallery", "/lab/shop", "/lab/demo/slow", "/lab/demo/missing", "/lab/demo/error"] as const;
 
 function normalizePath(path: string) {
   if (path.length > 1 && path.endsWith("/")) {

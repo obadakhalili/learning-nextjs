@@ -12,6 +12,18 @@ export default function LabIndexPage() {
 
       <ul className="space-y-2 text-sm">
         <li>
+          <Link className="text-blue-700 underline" href="/lab/gallery">
+            /lab/gallery
+          </Link>{" "}
+          lets you test intercepted route behavior for <code>/lab/photo/[id]</code>.
+        </li>
+        <li>
+          <Link className="text-blue-700 underline" href="/lab/shop">
+            /lab/shop
+          </Link>{" "}
+          tests interception without slots for <code>/lab/item/[id]</code>.
+        </li>
+        <li>
           <Link className="text-blue-700 underline" href="/lab/demo/slow">
             /lab/demo/slow
           </Link>{" "}

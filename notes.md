@@ -151,6 +151,15 @@
   - Final wording that clicked:
     - `@slot` is part of the route tree, but not a URL path segment
 
+- Intercepted routes mental model (paired with slots)
+  - Canonical route still exists and is the default truth for that URL.
+  - Interceptor is an alternative implementation of the same URL, chosen on soft nav from the right context.
+  - Hard refresh/direct enter uses canonical route (no interception context exists).
+  - Interception is not tied to slots:
+    - interceptor under normal branch -> renders in `children`
+    - interceptor under `@slot` -> renders in that slot prop (common modal/sidebar pattern)
+  - Compact rule: Same destination URL, but on soft navigation Next may choose a context-local intercepted branch if one exists in the currently mounted route tree; on hard/direct navigation (no prior tree context), Next always uses the canonical branch.
+
 - Server layout + client-only dynamic extraction
   - Active tab highlighting needed `usePathname()` (client hook).
   - Instead of making all of `/lab/layout.tsx` client-side, only nav was extracted:
