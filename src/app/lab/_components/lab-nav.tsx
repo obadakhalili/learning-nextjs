@@ -7,6 +7,8 @@ const links = [
   "/lab",
   "/lab/account",
   "/lab/billing",
+  "/lab/static-slug/alpha",
+  "/lab/query",
   "/lab/gallery",
   "/lab/shop",
   "/lab/demo/slow",

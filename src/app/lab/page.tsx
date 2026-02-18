@@ -19,6 +19,22 @@ export default function LabIndexPage() {
           group layout/template without adding <code>workspace</code> to the URL.
         </li>
         <li>
+          <Link className="text-blue-700 underline" href="/lab/static-slug/alpha">
+            /lab/static-slug/alpha
+          </Link>{" "}
+          uses <code>generateStaticParams()</code> for known slugs (try also{" "}
+          <Link className="text-blue-700 underline" href="/lab/static-slug/gamma">
+            /lab/static-slug/gamma
+          </Link>
+          ).
+        </li>
+        <li>
+          <Link className="text-blue-700 underline" href="/lab/query?q=nextjs&sort=asc">
+            /lab/query?q=nextjs&sort=asc
+          </Link>{" "}
+          reads <code>searchParams</code> (request-time dynamic render).
+        </li>
+        <li>
           <Link className="text-blue-700 underline" href="/lab/gallery">
             /lab/gallery
           </Link>{" "}

@@ -170,6 +170,15 @@
   - There is no "optional single non-catch-all" bracket form.
     - model it with route structure (for example `page.tsx` + `[slug]/page.tsx`).
 
+- `[slug]` params vs `searchParams` rendering model
+  - `[slug]` by default is request-time dynamic server rendering.
+  - If slug values are known in advance with `generateStaticParams()`, those paths can be prerendered.
+  - `searchParams` in a Server Page opts into request-time dynamic server rendering.
+  - Dynamic here still means server rendering, not client rendering.
+  - Example in project:
+    - `src/app/lab/static-slug/[slug]/page.tsx` uses `generateStaticParams()` (`alpha`, `beta`)
+    - `src/app/lab/query/page.tsx` reads `searchParams`
+
 - `(group)` vs `_folder`
   - `(group)` is a non-URL route-tree segment.
   - Children under it get shared routing behavior from group-level files:
@@ -265,3 +274,4 @@
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Learn about SEO features in nextjs
+  - Why nextjs?
