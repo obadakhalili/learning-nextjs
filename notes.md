@@ -5,10 +5,13 @@
     - `layout.tsx` is not "never re-render".
     - It is usually reused across child-route transitions, but can still update/re-enter/reload.
   - Drawing:
-    - navigate `/dashboard/a` -> `/dashboard/b`
-    - `layout.tsx`: stays mounted (usually reused)
-    - `template.tsx`: remounts
-    - `page.tsx`: remounts
+    ```text
+    navigate /dashboard/a -> /dashboard/b
+
+    layout.tsx   stays mounted (usually reused)
+    template.tsx remounts
+    page.tsx     remounts
+    ```
 
 - Why `params` is a Promise
   - Promise here is a rendering signal, not a URL parsing cost issue.
@@ -26,8 +29,12 @@
   - A page is not treated as one indivisible block.
   - Rendering decisions happen per subtree/boundary.
   - Drawing:
-    - `Segment tree -> Component tree -> Render work tree`
-    - `(static-safe regions vs request-dependent regions)`
+    ```text
+    Segment tree
+      -> Component tree
+        -> Render work tree
+           (static-safe regions vs request-dependent regions)
+    ```
 
 - What makes a subtree dynamic
   - Dynamic-ness comes from data access, not from Suspense itself.
@@ -35,10 +42,12 @@
     - calls inside components make subtree data-dependent
     - nearest parent Suspense is usually where the streaming cut happens
   - Drawing:
-    - `Parent`
-    - `|- Static UI`
-    - ``- Suspense(fallback)`
-    - `   \- subtree reads cookies()/request data`
+    ```text
+    Parent
+    ├─ Static UI
+    └─ Suspense(fallback)
+       └─ Subtree reads cookies()/request data
+    ```
 
 - Dynamic holes (key correction)
   - Dynamic hole does NOT mean client component.
@@ -53,9 +62,11 @@
     - ready shell/fallback can be sent first
     - dynamic boundary results are streamed later
   - Drawing:
-    - `t0: shell + fallback`
-    - `t1: dynamic subtree chunk arrives`
-    - `t2: browser swaps fallback -> resolved UI`
+    ```text
+    t0: shell + fallback
+    t1: dynamic subtree chunk arrives
+    t2: browser swaps fallback -> resolved UI
+    ```
 
 - Cache layers
   - Full Route Cache:
@@ -80,11 +91,13 @@
   - Deep code can read current mode/context without manually passing args everywhere.
   - "Async" matters because context survives across `await`.
   - Drawing:
-    - set context (`mode=request/prerender/cache`)
-    - render tree
-    - deep helper
-    - `await`
-    - deep helper still sees same context
+    ```text
+    set context (mode=request/prerender/cache)
+      -> render tree
+        -> deep helper
+          -> await
+            -> deep helper still sees same context
+    ```
 
 - Mode-dependent behavior
   - The same API access can produce different behavior depending on mode:
