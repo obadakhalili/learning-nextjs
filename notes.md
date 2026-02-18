@@ -158,7 +158,17 @@
   - Interception is not tied to slots:
     - interceptor under normal branch -> renders in `children`
     - interceptor under `@slot` -> renders in that slot prop (common modal/sidebar pattern)
-  - Compact rule: Same destination URL, but on soft navigation Next may choose a context-local intercepted branch if one exists in the currently mounted route tree; on hard/direct navigation (no prior tree context), Next always uses the canonical branch.
+  - Compact rule:
+    - same destination URL, but on soft navigation Next may choose a context-local intercepted branch if one exists in the currently mounted route tree
+    - on hard/direct navigation (no prior tree context), Next always uses the canonical branch
+
+- Dynamic segment syntax that clicked
+  - `[slug]` = one required segment.
+  - `[...slug]` = required catch-all (1+ segments).
+  - `[[...slug]]` = optional catch-all (0+ segments).
+  - `[[slug]]` is not valid syntax in App Router.
+  - There is no "optional single non-catch-all" bracket form.
+    - model it with route structure (for example `page.tsx` + `[slug]/page.tsx`).
 
 - Server layout + client-only dynamic extraction
   - Active tab highlighting needed `usePathname()` (client hook).
