@@ -169,6 +169,9 @@
   - `[[slug]]` is not valid syntax in App Router.
   - There is no "optional single non-catch-all" bracket form.
     - model it with route structure (for example `page.tsx` + `[slug]/page.tsx`).
+  - Route props helper wording clarification:
+    - "Static routes resolve params to {}" means static route pattern (no `[segment]` in pathname).
+    - It does NOT mean static rendering mode.
 
 - `[slug]` params vs `searchParams` rendering model
   - `[slug]` by default is request-time dynamic server rendering.
