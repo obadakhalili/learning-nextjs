@@ -197,5 +197,25 @@
     - segment `not-found.tsx` is for "matched route, missing resource/data"
     - it is not for "URL does not exist in route tree"
 
+- `error.tsx` mental model
+  - `error.tsx` is a segment error boundary fallback UI.
+  - Next wraps each segment subtree with an internal ErrorBoundary and passes:
+    - `error` (the thrown error)
+    - `reset` (retry function)
+  - `reset` behavior:
+    - clears boundary error state
+    - rerenders that segment subtree
+    - if error is gone -> normal UI appears
+    - if error still throws -> `error.tsx` shows again
+  - Auto-reset behavior:
+    - boundary also resets when pathname changes (navigation away)
+  - Important distinction:
+    - `error.tsx` handles normal render errors
+    - router control signals like `notFound()` / `redirect()` are handled by different boundaries
+  - In this app:
+    - `/lab/demo/error` throws in `app/lab/demo/[slug]/page.tsx`
+    - nearest boundary `app/lab/error.tsx` renders
+    - "Try again" calls `reset()`
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
