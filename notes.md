@@ -178,5 +178,24 @@
     - `[slug]/loading.tsx` is shown
     - new slug page replaces loading when ready
 
+- `not-found.tsx` mental model (route 404 vs resource 404)
+  - `notFound()` from `next/navigation` throws a special internal 404 signal.
+  - Next catches that signal and renders nearest segment `not-found.tsx`.
+  - Important distinction:
+    - route 404 (URL does not match any route at all) -> root/global 404
+    - resource 404 inside matched route -> nearest segment `not-found.tsx`
+  - Why `/lab/x` and `/lab/demo/missing` behave differently:
+    - `/lab/x`:
+      - no route match
+      - `app/lab/not-found.tsx` is not used
+      - global Next/root 404 is shown
+    - `/lab/demo/missing`:
+      - route matches `app/lab/demo/[slug]/page.tsx`
+      - page calls `notFound()`
+      - `app/lab/not-found.tsx` is shown
+  - Key takeaway:
+    - segment `not-found.tsx` is for "matched route, missing resource/data"
+    - it is not for "URL does not exist in route tree"
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
