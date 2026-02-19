@@ -626,3 +626,67 @@ No SSR. No HTML. No hydration. That's why soft nav is faster.
 | SSR render (Pass 2) | Already resolved to output | Executed with limitations (no effects, no handlers) |
 | Hydration (client) | Nothing to do | Fully executed, handlers attached |
 | Soft nav | Fully executed (if segment changed) | NOT executed on server — rendered on client from RSC payload |
+
+## Streaming data from Server to Client with `use()`
+
+**Problem:** `await` in a Server Component blocks — nothing renders until the async operation finishes.
+
+**Solution:** Pass the Promise (not the awaited value) as a prop to a Client Component. The Client Component reads it with `use()`, wrapped in `<Suspense>`.
+
+```tsx
+// Server Component — does NOT await
+export default function Page() {
+  const postPromise = getPost()
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <PostView postPromise={postPromise} />
+    </Suspense>
+  )
+}
+```
+
+```tsx
+// Client Component — uses use() to read the promise
+'use client'
+import { use } from 'react'
+
+export default function PostView({ postPromise }) {
+  const post = use(postPromise)  // suspends until resolved
+  return <p>{post.title}</p>
+}
+```
+
+### How it works on the wire
+
+You can't send a Promise over HTTP. React's Flight renderer (the RSC serializer) handles it:
+
+1. During RSC render, the serializer walks props crossing the `'use client'` boundary. When it encounters a Promise, it assigns an ID, writes a placeholder (`$@2`), and attaches a `.then()` to the actual Promise in server memory.
+2. Everything around the Suspense boundary is flushed immediately.
+3. SSR pass hits the Suspense boundary, `use()` throws (value not ready), fallback HTML is rendered instead.
+4. Browser receives HTML with fallback — user sees "Loading..." instantly.
+
+When the Promise resolves on the server:
+5. The `.then()` fires, serializes the value, writes it to the still-open stream as a late chunk (`2:{"title":"Hello World"}`).
+6. A `$RC` inline script (tiny vanilla JS, not React) finds the `<!--$?-->` marker in the DOM and swaps the fallback HTML for the real HTML — **instant visual update, no React needed**.
+7. React reconciliation then confirms its virtual tree matches the updated DOM.
+
+### Why two swap mechanisms ($RC + React reconciliation)?
+
+- `$RC` DOM swap → works at HTML level, no React needed. If data resolves before React JS loads, user sees content immediately.
+- React reconciliation → updates React's internal virtual tree to stay consistent.
+
+### Tracking
+
+- **Server side:** the Flight serializer attaches `.then()` to the Promise during prop serialization. The component is done — only the Promise matters after that.
+- **Client side:** React maintains a map of async entries by ID (`{2: {status: "pending"}}`). `use()` checks the status — if pending, throws (Suspense catches it). When the late chunk arrives, the entry resolves, React retries rendering the children of the Suspense boundary that was waiting on it.
+
+### When to use `use()` vs just `await`
+
+If only one component needs the data → a wrapper server component that `await`s and passes the resolved value as a prop is simpler and equivalent.
+
+`use()` with a Promise prop adds value when:
+
+1. **You don't want to block siblings.** `await` in a Layout blocks `{children}` from rendering (React doesn't have the JSX yet). Passing a promise instead lets Layout return immediately — `{children}` renders and streams right away, only the component calling `use()` suspends behind its own Suspense boundary.
+2. **Multiple client components need the same data.** Combine with a context provider: one server-side fetch, pass the promise to a context provider in the layout, any client component reads it via `use(useContext(...))`. Without this, you'd need a separate server component wrapper for each.
+
+These two benefits are independent — you can use `use()` just for #1 without any context.
