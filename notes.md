@@ -548,3 +548,81 @@
   - what is hydration?
     - question: solve a bug related to hydration
   - how does react transition works
+
+---
+
+## How Server and Client Components work in Next.js (full lifecycle)
+
+### 1. On the server — two passes
+
+**Pass 1 — RSC render (Flight render)**
+
+React walks the component tree top-down:
+- **Server Component** → fully executes (including `await`), produces concrete JSX (divs, text, etc.)
+- **Client Component** → NOT executed. Records a reference to its JS bundle file + serialized props from parent.
+
+Output is the **RSC Payload**, a streaming format:
+
+```
+0:["$","div",null,{"children":[["$","h1",null,{"children":"My Post"}],["$","$L1",null,{"likes":42}]]}]
+1:I["./like-button.js","LikeButton"]
+```
+
+- `$L1` = "Client Component #1 goes here"
+- Line `1:` = "Client Component #1 is `LikeButton` from `./like-button.js`"
+- `{"likes":42}` = serialized props
+- Server components are resolved to output. Client components are holes with instructions.
+
+**Pass 2 — SSR render (HTML generation)**
+
+React takes the RSC Payload and does a second pass to produce HTML. This time it **does** execute client components, but limited:
+- `useState(0)` → returns `0` (initial value only)
+- `useEffect` → skipped
+- `onClick` → ignored (HTML can't have JS handlers)
+
+Both HTML and RSC Payload are sent in the **same response**, streamed as chunks.
+
+### 2. On the client (first load)
+
+Three steps in sequence:
+
+**Step 1 — HTML paint**
+Browser receives HTML, renders it immediately with built-in parser. No JS needed. User sees full page but can't interact.
+
+**Step 2 — RSC Payload reconciliation**
+React JS loads and reads the RSC Payload (delivered via `self.__next_f.push` script tags in the HTML). Builds internal virtual tree:
+- Server component output → concrete nodes
+- Client component references → React knows "component #1 is LikeButton with props {likes: 42}"
+
+Reconciles this tree against existing DOM — confirming the DOM matches expectations.
+
+**Step 3 — Hydration**
+React walks DOM and virtual tree side-by-side. For each Client Component:
+- Executes the component function for real (working `useState`, `useReducer`, etc.)
+- Does NOT create new DOM — adopts existing nodes
+- Attaches event handlers (`onClick`, `onChange`)
+- Schedules `useEffect` callbacks
+
+Page is now fully interactive.
+
+### 3. Subsequent navigations (soft nav)
+
+No HTML generated. Only one pass:
+
+Client sends request with **Router State Tree** (which layouts are already mounted). Server:
+1. Skips already-mounted layouts
+2. Runs RSC render (Pass 1 only) for new/changed segments
+3. Streams back RSC Payload
+
+Client receives RSC Payload, builds new virtual tree, diffs against current tree, patches DOM. New client components mount normally. Existing client components keep their state.
+
+No SSR. No HTML. No hydration. That's why soft nav is faster.
+
+### What runs where — summary
+
+| | Server Component | Client Component |
+|---|---|---|
+| RSC render (Pass 1) | Fully executed | NOT executed — recorded as reference |
+| SSR render (Pass 2) | Already resolved to output | Executed with limitations (no effects, no handlers) |
+| Hydration (client) | Nothing to do | Fully executed, handlers attached |
+| Soft nav | Fully executed (if segment changed) | NOT executed on server — rendered on client from RSC payload |
