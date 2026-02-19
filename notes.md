@@ -519,6 +519,14 @@
   - Back/forward (browser buttons) still restores from cache.
   - Configurable via `staleTimes.dynamic` in `next.config.js` (e.g. 30 seconds).
 
+- `useLinkStatus` hook
+  - Shows navigation feedback on the link itself while a transition is in progress.
+  - Must be used inside a child component of `<Link>`. Returns `{ pending: boolean }`.
+  - How it works: `<Link>` wraps navigation in `startTransition()` and provides the
+    transition's pending state via React context. `useLinkStatus` reads from that context.
+  - Different from `loading.tsx`: `loading.tsx` replaces the page content area.
+    `useLinkStatus` gives feedback on the link the user clicked, before any navigation happens visually.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
