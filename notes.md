@@ -527,6 +527,14 @@
   - Different from `loading.tsx`: `loading.tsx` replaces the page content area.
     `useLinkStatus` gives feedback on the link the user clicked, before any navigation happens visually.
 
+- Native History API (`pushState`/`replaceState`) vs `<Link>`/`router.push`
+  - `<Link>`/`router.push` trigger actual navigation: server request, RSC render, tree diff.
+  - `pushState`/`replaceState` just update the URL without triggering navigation. No server request.
+  - Use case: URL changes that don't affect what's rendered (sorting, filters, locale).
+    The URL is used purely as state storage (bookmarking, sharing, browser history)
+    while the UI update is handled client-side.
+  - Next.js integrates these with its router so `usePathname`/`useSearchParams` still reflect the update.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
