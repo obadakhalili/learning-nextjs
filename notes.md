@@ -498,6 +498,21 @@
   - This is independent of prefetching. Prefetching is about WHEN the request is made (before vs after click).
     Streaming is about HOW the response is sent (in chunks vs all at once).
 
+- Client-side transitions (soft navigation)
+  - Unlike traditional server-rendered pages where route changes cause a full page reload,
+    after initial load, navigating within the app uses client transitions.
+  - Only the changed content is dynamically replaced on screen. Shared layouts stay mounted.
+  - How it works under the hood:
+    - Next.js sends a request for the RSC payload of the target route.
+    - The request includes the Router State Tree (which layouts/segments are currently mounted)
+      so the server skips re-rendering layouts that are already on screen.
+    - Server does only 1 pass (RSC), no SSR, no HTML. Returns raw RSC payload.
+    - React on the client parses the new RSC payload, diffs the current virtual tree
+      against the new one, and patches the DOM accordingly.
+  - Client component state is preserved purely by React's diffing:
+    if a component is in the same tree position in old and new trees, React keeps its state.
+    The server knows nothing about client state.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
