@@ -690,3 +690,28 @@ If only one component needs the data → a wrapper server component that `await`
 2. **Multiple client components need the same data.** Combine with a context provider: one server-side fetch, pass the promise to a context provider in the layout, any client component reads it via `use(useContext(...))`. Without this, you'd need a separate server component wrapper for each.
 
 These two benefits are independent — you can use `use()` just for #1 without any context.
+
+## Context providers pattern
+
+Context providers must be client components (`createContext`, `useState`, etc. are client-only). But you want them high in the tree so all client components can consume them.
+
+Problem: putting a client component high in the tree makes everything below it client too.
+
+Solution: the `children` prop pattern. The provider wraps `{children}` but doesn't import them — they're passed in from the server component layout. Children stay server components because they're not imported by the client component, just rendered through it.
+
+```tsx
+// app/theme-provider.tsx (Client Component)
+'use client'
+export default function ThemeProvider({ children }) {
+  return <ThemeContext value="dark">{children}</ThemeContext>
+}
+
+// app/layout.tsx (Server Component)
+import ThemeProvider from './theme-provider'
+export default function Layout({ children }) {
+  return <ThemeProvider>{children}</ThemeProvider>
+  // children here are server components — they stay server
+}
+```
+
+Server components inside `{children}` cannot use `useContext` — hooks don't exist on the server. Only client components consume the context.
