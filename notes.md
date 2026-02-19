@@ -513,6 +513,12 @@
     if a component is in the same tree position in old and new trees, React keeps its state.
     The server knows nothing about client state.
 
+- Router Cache stale time for dynamic routes
+  - In Next.js 15, dynamic pages have stale time = 0 in the Router Cache by default.
+  - Every soft navigation to a dynamic route re-fetches from the server, even if just visited.
+  - Back/forward (browser buttons) still restores from cache.
+  - Configurable via `staleTimes.dynamic` in `next.config.js` (e.g. 30 seconds).
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
