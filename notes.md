@@ -491,6 +491,13 @@
   - Override with `<Link prefetch={true}>` to force full prefetch even for dynamic routes
     (opts into the server cost).
 
+- Streaming
+  - The server sends parts of the response as they're ready instead of waiting for everything.
+  - When rendering a route, fast parts (layouts, loading fallbacks) are sent first.
+    Slow parts (page with DB call behind a Suspense boundary) stream in later.
+  - This is independent of prefetching. Prefetching is about WHEN the request is made (before vs after click).
+    Streaming is about HOW the response is sent (in chunks vs all at once).
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
