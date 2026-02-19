@@ -715,3 +715,27 @@ export default function Layout({ children }) {
 ```
 
 Server components inside `{children}` cannot use `useContext` — hooks don't exist on the server. Only client components consume the context.
+
+## Sharing data with context and React.cache
+
+Problem: the same data needed by both server and client components in the same request.
+
+- **Client components** get data from context (can't call server functions directly)
+- **Server components** call the fetch function directly (can't read context)
+
+Without deduplication, this means two fetches for the same data.
+
+`React.cache` memoizes the function per request — any call to `getUser()` within the same request returns the same Promise, the fetch only runs once:
+
+```tsx
+// layout.tsx
+const userPromise = getUser()                    // fetch runs here (1st call)
+<UserProvider userPromise={userPromise}>...</UserProvider>
+
+// some server component
+const user = await getUser()                     // same cached result, no 2nd fetch
+```
+
+Also deduplicates across multiple server components independently calling the same function — no need to prop-drill from a parent just to avoid duplicate fetches.
+
+Cache is scoped per request — next request starts fresh.
