@@ -274,6 +274,189 @@
     - nearest boundary `app/lab/error.tsx` renders
     - "Try again" calls `reset()`
 
+- React Server Components (RSC)
+  - RSC is a protocol defined by React, not a Next.js invention. Next.js implements it.
+  - The main idea: components in the app tree live in two module graphs -- server and client.
+  - By default, components are server components. `'use client'` marks the boundary into the client graph.
+  - Server components can use DB calls, file system, secrets. They never ship code to the browser.
+  - Client components can use state, effects, event handlers, browser APIs.
+  - `'use client'` is a module-graph boundary: everything imported from a `'use client'` file is in the client graph.
+
+  - Example app tree used throughout:
+    ```tsx
+    // Page (server component, async)
+    export default async function Page() {
+      const product = await db.getProduct(42) // DB call
+      return (
+        <h1>{product.name}</h1>
+        <p>${product.price}</p>
+        <AddToCartButton productId={42} price={99} />   // client component
+        <Suspense fallback={<p>Loading reviews...</p>}>
+          <Reviews productId={42} />                      // server component, async, slow
+        </Suspense>
+      )
+    }
+
+    // AddToCartButton ('use client')
+    'use client'
+    export default function AddToCartButton({ productId, price }) {
+      const [qty, setQty] = useState(1)
+      return <button onClick={() => setQty(qty+1)}>Add {qty} to cart</button>
+    }
+
+    // Reviews (server component, async)
+    export default async function Reviews({ productId }) {
+      const reviews = await db.getReviews(productId) // slow DB call
+      return reviews.map(r => <div>{r.text}</div>)
+    }
+    ```
+
+  - What happens on initial page load (hard navigation):
+    - Two rendering passes happen on the server, always together.
+    - Pass 1 -- RSC render:
+      - React walks the tree top-down, calls server component functions, resolves their JSX.
+      - When it hits a `'use client'` component, it does NOT call it. It emits a reference:
+        "load chunk `add-to-cart-button.js`, pass it `{productId: 42, price: 99}`."
+      - When an async server component inside a `<Suspense>` suspends (awaiting slow data),
+        React marks that boundary as pending and moves on. It does NOT wait.
+      - When an async server component is NOT inside a `<Suspense>`, React blocks and waits.
+      - This is why Page (no Suspense wrapper) blocks the stream, but Reviews (inside Suspense) doesn't.
+      - Output: the RSC payload.
+    - RSC payload looks like (simplified):
+      ```
+      ["$","h1",null,{"children":"Keyboard"}]
+      ["$","p",null,{"children":"$99"}]
+      ["$","$Ladd-to-cart-button",null,{"productId":42,"price":99}]  <- reference, not rendered
+      ["$","$Suspense",null,{"fallback":"Loading reviews...","children":"$pending"}]
+      ```
+      - Server components are fully resolved -- only their output (h1, p, div) appears, not component code.
+      - Client components appear as references with serialized props.
+    - Pass 2 -- SSR render:
+      - Takes the RSC payload from pass 1.
+      - For server component output: converts resolved JSX to HTML strings. No re-execution.
+      - For client component references: imports the actual component code and runs it on the server.
+        This works because: `useState(1)` returns initial value, `useEffect` is skipped,
+        event handlers are ignored in HTML output. No browser APIs are called during render.
+      - For pending Suspense boundaries: outputs the fallback HTML.
+      - Output: HTML string.
+    - Server streams the response (chunked):
+      ```html
+      <!-- first chunk -->
+      <h1>Keyboard</h1>
+      <p>$99</p>
+      <button>Add 1 to cart</button>        <!-- client component HTML from SSR pass -->
+      <p>Loading reviews...</p>              <!-- Suspense fallback -->
+
+      <script>self.__next_f.push([...])</script>   <!-- RSC payload stored for React -->
+      <script src="/add-to-cart-button.js"></script> <!-- client component JS bundle -->
+      ```
+    - `self.__next_f.push` explained:
+      - React hasn't loaded yet when the browser starts parsing HTML.
+      - Next.js embeds RSC payload in inline `<script>` tags that push data into a global array.
+      - These run immediately and just store data. They don't render anything.
+      - When React loads later, it reads from `self.__next_f` to get the RSC payload.
+      - It's a mailbox: HTML stream drops off messages, React picks them up when ready.
+    - Browser receives the HTML and paints it instantly (built-in HTML parser, no JS needed).
+      The button shows "Add 1 to cart" but clicking it does nothing yet.
+    - Why two passes instead of one?
+      - HTML is for instant visual display (browser paints it before any JS runs) and SEO.
+      - RSC payload is for React to understand the tree structure (where client components are,
+        what their props are). HTML alone can't carry this information.
+      - Both arrive in the same response. The point isn't that HTML arrives first over the network.
+        It's that the browser can act on HTML instantly, while the RSC payload is useless until
+        React's JavaScript downloads and executes.
+
+  - Hydration (what happens after JS loads):
+    - Step 1: React reads `self.__next_f`. Builds a virtual tree in memory from RSC payload:
+      ```
+      ServerOutput: <h1>Keyboard</h1>
+      ServerOutput: <p>$99</p>
+      ClientComponent: AddToCartButton { module: "add-to-cart-button.js", props: {productId:42, price:99} }
+      SuspenseBoundary: (pending, fallback: <p>Loading reviews...</p>)
+      ```
+    - Step 2: React calls client component functions for real.
+      `useState(1)` sets up real state tracking. Produces virtual DOM: `<button>Add 1 to cart</button>`.
+    - Step 3: React walks the real DOM and virtual tree side by side:
+      ```
+      Real DOM (from HTML):                  Virtual tree:
+      <h1>Keyboard</h1>                 ↔   ServerOutput: <h1>Keyboard</h1>      ✓ match
+      <button>Add 1 to cart</button>    ↔   ClientComponent output: <button>...   ✓ match
+      ```
+      Every node matches. React does NOT create new DOM nodes. It adopts existing ones.
+    - Step 4: React attaches `onClick` handler to the existing `<button>` DOM node.
+      Clicking it now calls `setQty`. The button is alive.
+    - Step 5: `useEffect` callbacks run for the first time.
+    - That's hydration: React walks already-painted DOM and wires up interactive parts.
+      If real DOM and virtual tree don't match, React logs a warning and force-replaces that subtree (bad for perf).
+
+  - Deferred server content (streaming in later):
+    - While all the above happened, the server was still awaiting `db.getReviews()`.
+    - When it finishes, server runs RSC + SSR for that boundary, streams another chunk:
+      ```html
+      <script>
+      $RC("reviews-boundary", "<div>Great keyboard!</div><div>Love it</div>")
+      </script>
+      <script>self.__next_f.push([/* RSC payload update */])</script>
+      ```
+    - Browser executes the script. React swaps "Loading reviews..." for the actual reviews.
+    - This is the same streaming model from earlier notes: t0 shell, t1 chunk, t2 swap.
+
+  - Soft navigation (clicking a `<Link>` to `/shop/99`):
+    - React Router intercepts the click. No full page request. Starts a transition.
+    - Sends a fetch with `RSC: 1` header: "give me just the RSC payload, no HTML."
+      ```
+      GET /shop/99
+      RSC: 1
+      Next-Router-State-Tree: ...  <- tells server what layouts are already mounted
+      ```
+    - Server does RSC pass only. No SSR. No HTML. Returns raw RSC payload:
+      ```
+      ["$","h1",null,{"children":"Mechanical Keyboard"}]
+      ["$","p",null,{"children":"$149"}]
+      ["$","$Ladd-to-cart-button",null,{"productId":99,"price":149}]
+      ```
+    - React on the client builds new virtual tree, diffs against current tree:
+      - Layout: unchanged -> DOM untouched, state preserved.
+      - `<h1>`: "Keyboard" -> "Mechanical Keyboard" -> DOM text updated.
+      - `AddToCartButton`: new props -> React re-renders it on the client (normal React render).
+      - Reviews: pending Suspense -> shows fallback, streams in later.
+    - Key difference from initial load: no HTML anywhere. No SSR pass.
+      Client components render directly on the client, like normal React.
+    - If RSC payload for a previously visited route is in Router Cache, no network request at all.
+
+  - When do the two passes happen?
+    - Both passes are always paired. You never get RSC at build time and SSR at request time.
+    - Static route (no dynamic data): both passes at build time. Cached. Served as-is on request.
+    - Dynamic route (cookies, searchParams, etc.): both passes at request time.
+    - PPR: both passes at build for static shell. Both passes at request for dynamic holes only.
+    - This is a Next.js scheduling decision, not an RSC protocol concern.
+
+  - Server components inside client components:
+    - You cannot import a server component inside a `'use client'` file.
+      The import makes it join the client module graph -- it stops being a server component.
+    - The only way is through props (not just `children` -- any prop works):
+      ```tsx
+      // page.tsx (server component -- the orchestrator)
+      import Modal from './modal'       // client
+      import CartItems from './cart-items' // server
+      import CartTotal from './cart-total' // server
+
+      export default function Page() {
+        return (
+          <Modal
+            header={<CartItems />}    // server component rendered first, passed as prop
+            footer={<CartTotal />}    // same -- any prop works, not just children
+          >
+            <p>Your cart</p>
+          </Modal>
+        )
+      }
+      ```
+    - The server component that imports both is the orchestrator.
+      It renders server components on the server, passes their output as serialized JSX to the client component.
+      The client component receives them as opaque React elements and renders them wherever it wants.
+    - Serialized JSX can cross any boundary because it's just data.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
