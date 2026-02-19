@@ -457,6 +457,40 @@
       The client component receives them as opaque React elements and renders them wherever it wants.
     - Serialized JSX can cross any boundary because it's just data.
 
+- Prefetching behavior
+  - `<Link>` prefetches routes when they enter the viewport (or on hover).
+  - How much is prefetched depends on whether the route is static or dynamic:
+    - Static route: full RSC payload is prefetched. It's just serving a cached file, basically free.
+    - Dynamic route: only the static shell is prefetched (layouts + `loading.tsx` fallback).
+      The actual page content is NOT prefetched because that means running server code (DB calls, etc).
+  - Why not prefetch dynamic routes fully?
+    - It's a cost trade-off. Imagine a category page with 30 product links in the viewport.
+      Prefetching all 30 means 30 server renders and 30 DB calls for routes the user may never visit.
+  - What "partial prefetching" means concretely:
+    - Layouts and the loading skeleton are prefetched (they're static, no request-time data needed).
+    - On click: layouts + loading fallback commit instantly, dynamic page content streams in after.
+    - The loading fallback does NOT replace the layout. It sits inside the layout's `{children}` slot.
+    - Drawing:
+      ```text
+      /shop/[id] with ShopLayout (sidebar) + loading.tsx + page.tsx (dynamic)
+
+      ┌────────────────────────────────┐
+      │  Header (RootLayout)           │  ← prefetched, shows instantly
+      ├──────────┬─────────────────────┤
+      │ Sidebar  │  ░░ skeleton ░░░░░  │  ← loading.tsx in {children} slot
+      │ (Shop    │  ░░░░░░░░░░░░░░░░░  │
+      │  Layout) │  ░░░░░░░░░░░░░░░░░  │  ← prefetched, shows instantly
+      ├──────────┴─────────────────────┤
+      │  Footer (RootLayout)           │  ← prefetched, shows instantly
+      └────────────────────────────────┘
+
+      then: server finishes page.tsx → skeleton swaps for real content
+      ```
+  - Without `loading.tsx` on a dynamic route: nothing committable is prefetched.
+    Old page stays visible until server finishes everything. Then one big swap.
+  - Override with `<Link prefetch={true}>` to force full prefetch even for dynamic routes
+    (opts into the server cost).
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
