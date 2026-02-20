@@ -548,6 +548,10 @@
 
 - Client components are also subject to this. "Client component" doesn't mean "only runs in browser". Client components still run on the server during the SSR pass to produce HTML. With `cacheComponents`, that SSR pass happens at build time. So if a client component calls `usePathname()` or any runtime API, it fails at build time too — unless it's behind a `<Suspense>`.
 
+- The difference `cacheComponents` makes for runtime APIs in client components (like `usePathname()`):
+  - Without `cacheComponents`: `usePathname()` runs at build time, returns whatever value is available (or null), no error. The incorrect value gets patched during hydration on the client. Next.js tolerates this.
+  - With `cacheComponents`: `usePathname()` is actively tracked as runtime data access. Accessing it outside `<Suspense>` is a build error — the static shell must be correct upfront, not fixed later by hydration.
+
 - `loading.tsx` at a segment level wraps `{children}` in a Suspense boundary — it covers the page content passed into the layout, NOT components rendered directly inside the layout itself (like a `<LabNav />` in the layout JSX).
 
 - `loading.tsx` is a coarse Suspense boundary. If a page reads `searchParams`, a `loading.tsx` above it prevents the build error, but the entire `{children}` area shows the fallback at request time — including any static parts of the page (headings, descriptions, etc.).
