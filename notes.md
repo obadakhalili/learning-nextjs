@@ -776,6 +776,8 @@ Also deduplicates across multiple server components independently calling the sa
 
 Cache is scoped per request — next request starts fresh.
 
+`React.cache` inside a `use cache` boundary gets its own isolated scope, separate from the outer request's scope. If `getUser()` is called in the layout (request scope) AND inside a `use cache` function, those two calls don't share memoization. Reason: `use cache` must produce a deterministic, self-contained output — if it shared React.cache state with the outer request, its output could differ depending on what already ran in that request, making the cached result unreliable for future requests.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
