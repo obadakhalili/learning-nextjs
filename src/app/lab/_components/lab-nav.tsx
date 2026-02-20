@@ -15,6 +15,7 @@ const links = [
   "/lab/demo/missing",
   "/lab/demo/error",
   "/lab/user",
+  "/lab/server-fn",
 ] as const;
 
 function normalizePath(path: string) {

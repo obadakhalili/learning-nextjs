@@ -857,6 +857,76 @@ Cache is scoped per request — next request starts fresh.
 
 `React.cache` inside a `use cache` boundary gets its own isolated scope, separate from the outer request's scope. If `getUser()` is called in the layout (request scope) AND inside a `use cache` function, those two calls don't share memoization. Reason: `use cache` must produce a deterministic, self-contained output — if it shared React.cache state with the outer request, its output could differ depending on what already ran in that request, making the cached result unreliable for future requests.
 
+## Server Functions
+
+- A Server Function is an async function marked with `'use server'`. It always runs on the server. A client component can call it like a normal function, but under the hood it's a network request.
+
+- **Broader term vs action:** "Server Function" is the broad term. "Server Action" specifically means a Server Function used in a mutation context (form submission, data update). A Server Action is by convention wrapped in `startTransition` — this happens automatically when passed to a `<form action={...}>` or `<button formAction={...}>`.
+
+- **How it works at build time:**
+  Next.js scans all `'use server'` functions and assigns each a unique ID (a hash). It registers a map: `id → function`. This map lives on the server only.
+
+- **What the client actually gets:**
+  When a client component imports a server function, the import is replaced with a stub — a function with the same name and signature, but internally it just calls `callServer(id, serializedArgs)`. The real function code never reaches the browser.
+
+  ```ts
+  // What you write (server):
+  export async function greet(name: string) {
+    'use server'
+    return { message: `Hello, ${name}!`, pid: process.pid }
+  }
+
+  // What the client bundle actually contains (simplified):
+  export async function greet(name) {
+    return callServer("abc123", [name])
+  }
+  ```
+
+- **Flight — React's wire protocol:**
+  Flight is the serialization format React uses to send data over the wire. It's like JSON but handles things JSON can't: Promises, dates, React elements (JSX), client component references, FormData, errors, etc. It's used in both directions:
+  - Server → client: RSC payloads (component trees, props)
+  - Client → server: server function arguments
+  - Server → client: server function return values
+
+- **What happens when you call a server function:**
+  ```
+  1. greet("Obada") called on the client
+  2. stub serializes args using Flight → sends POST to current page URL
+     - Header: Next-Action: abc123  (the function's ID)
+     - Body: Flight-encoded ["Obada"]
+  3. Server receives POST, looks up abc123, deserializes args, runs real greet()
+  4. Return value serialized as Flight stream → sent back as RSC payload
+  5. Next.js on the client decodes the Flight stream → resolves the Promise
+  6. await greet("Obada") returns { message: "Hello, Obada!", pid: 1234 }
+  ```
+  The POST goes to the current page URL (e.g. `/lab/server-fn`). Next.js distinguishes it from a normal page request via the `Next-Action` header.
+
+- **Why RSC payload and not plain JSON for the response:**
+  The response can contain more than just the return value. If the server function calls `revalidatePath`/`revalidateTag`, Next.js re-renders the affected routes on the server and includes fresh RSC payload for those routes in the same response. The client then reconciles that tree — diffs the new virtual tree against the current one, and commits the changes to the DOM (updating, mounting, or unmounting nodes as needed). All in one roundtrip.
+
+- **Simple case (no revalidation) — full sequence:**
+  ```tsx
+  // Client component
+  async function handleClick() {
+    const response = await greet(name)  // POST fires, awaits Flight response
+    setResult(response)                 // normal React setState → re-render
+  }
+  ```
+  No RSC reconciliation needed here. `await greet()` resolves with the return value, `setResult` triggers a normal React re-render. That's it.
+
+- **Where to define server functions:**
+  - Inline inside a Server Component (can't do this in a Client Component)
+  - In a separate file with `'use server'` at the top — then importable from both server and client components
+
+  ```ts
+  // app/actions.ts — entire file is server-only
+  'use server'
+  export async function createPost(formData: FormData) { ... }
+  export async function deletePost(id: string) { ... }
+  ```
+
+- **Demo in project:** `src/app/lab/server-fn/` — client component calls `greet(name)`, response includes `process.pid` and timestamp proving it ran on the server. Network tab shows the POST with `Next-Action` header.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
