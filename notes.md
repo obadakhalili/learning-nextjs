@@ -575,6 +575,8 @@
   }
   ```
 
+- `connection()` from `next/server` is an explicit opt-out from prerendering. Without it, a component with `Math.random()` or `Date.now()` would run at build time — the value gets baked into the static shell and served to every user. `await connection()` signals "run this at request time", making everything after it dynamic. Requires a `<Suspense>` boundary above it for the same reason any dynamic component does.
+
 - Why network calls aren't automatically prerendered: external systems are unreliable — they can fail or take unpredictable time. Prerendering can't be blocked on that. So any network call requires explicit declaration: `<Suspense>` (stream at request time) or `use cache` (cache it, opt into the risk yourself with a defined policy).
 
 ## How Server and Client Components work in Next.js (full lifecycle)

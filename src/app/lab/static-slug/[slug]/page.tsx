@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 
 type StaticSlugPageProps = {
   params: Promise<{ slug: string }>;
@@ -11,6 +12,8 @@ export function generateStaticParams() {
 }
 
 export default async function StaticSlugPage({ params }: StaticSlugPageProps) {
+  await connection();
+
   const { slug } = await params;
   const isPrebuiltSlug = prebuiltSlugs.includes(slug as (typeof prebuiltSlugs)[number]);
 

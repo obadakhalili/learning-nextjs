@@ -35,6 +35,7 @@ export default function LabNav() {
 
         return (
           <Link
+            prefetch={false}
             key={href}
             className={
               isActive
