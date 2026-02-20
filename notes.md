@@ -535,6 +535,42 @@
     while the UI update is handled client-side.
   - Next.js integrates these with its router so `usePathname`/`useSearchParams` still reflect the update.
 
+## Cache Components (`cacheComponents` flag)
+
+- Without `cacheComponents`: Next.js makes a per-route decision — static or dynamic. If any component in the route reads runtime data (`params`, `cookies()`, `searchParams`, etc.), the **entire route** renders at request time. No build-time prerendering of any part of it.
+
+- With `cacheComponents`: the decision becomes per-component. Next.js walks the tree at build time and prerendered whatever it can. Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws:
+  ```
+  Error: Uncached data was accessed outside of <Suspense>
+  ```
+
+- The "static shell" is everything Next.js can resolve at build time without knowing who the user is or what they're requesting. At request time, only the dynamic holes stream in.
+
+- Client components are also subject to this. "Client component" doesn't mean "only runs in browser". Client components still run on the server during the SSR pass to produce HTML. With `cacheComponents`, that SSR pass happens at build time. So if a client component calls `usePathname()` or any runtime API, it fails at build time too — unless it's behind a `<Suspense>`.
+
+- `loading.tsx` at a segment level wraps `{children}` in a Suspense boundary — it covers the page content passed into the layout, NOT components rendered directly inside the layout itself (like a `<LabNav />` in the layout JSX).
+
+- `loading.tsx` is a coarse Suspense boundary. If a page reads `searchParams`, a `loading.tsx` above it prevents the build error, but the entire `{children}` area shows the fallback at request time — including any static parts of the page (headings, descriptions, etc.).
+
+- The optimization track with `cacheComponents`: extract truly dynamic parts into dedicated components, wrap only those in `<Suspense>`. Everything else — headings, static UI, layout chrome — gets prerendered into the static shell and appears instantly. The tighter the Suspense boundaries, the more content in the static shell.
+
+  ```tsx
+  // coarse — entire page area shows fallback
+  // (just having loading.tsx at segment level)
+
+  // fine — only the dynamic part shows fallback
+  export default function QueryPage({ searchParams }) {
+    return (
+      <article>
+        <h1>searchParams demo</h1>        {/* static — in shell */}
+        <Suspense fallback={<p>Loading...</p>}>
+          <SearchResults searchParams={searchParams} />  {/* dynamic only */}
+        </Suspense>
+      </article>
+    )
+  }
+  ```
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when

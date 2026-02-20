@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import LabNav from "./_components/lab-nav";
 import UserProvider from "./_components/user-provider";
 import { getUser } from "./lib/user";
@@ -14,7 +15,11 @@ export default function LabLayout({
       <div className="min-h-screen bg-slate-100 p-6 text-slate-900">
         <div className="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[2fr_1fr]">
           <section className="rounded-xl bg-white p-6 shadow-sm">
-            <LabNav />
+            {/* at build time, static routes are completely prerendered, while dynamic components (like LabNav because it uses usePathname) are ignored */}
+            {/* if cacheComponents is enabled, it will try to prerender all components including dynamic ones by partially prerendering them (replacing dynamic holes with static fallback shells), so if cacheComponents is enabled LabNav will cause a build time error */}
+            <Suspense fallback={<div className="animate-pulse text-slate-400">Loading user...</div>}>
+              <LabNav />
+            </Suspense>
             {children}
           </section>
 
