@@ -571,6 +571,8 @@
   }
   ```
 
+- Why network calls aren't automatically prerendered: external systems are unreliable — they can fail or take unpredictable time. Prerendering can't be blocked on that. So any network call requires explicit declaration: `<Suspense>` (stream at request time) or `use cache` (cache it, opt into the risk yourself with a defined policy).
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
