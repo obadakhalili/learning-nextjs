@@ -927,6 +927,127 @@ Cache is scoped per request — next request starts fresh.
 
 - **Demo in project:** `src/app/lab/server-fn/` — client component calls `greet(name)`, response includes `process.pid` and timestamp proving it ran on the server. Network tab shows the POST with `Next-Action` header.
 
+## Server Actions and `startTransition`
+
+- **Server Action = Server Function used in a mutation context.** By convention it's always wrapped in `startTransition` — automatically when passed to `<form action={...}>` or `<button formAction={...}>`, manually otherwise.
+
+- **What `startTransition` is:**
+  React has two categories of updates:
+  - Urgent: typing, clicking — needs instant visual feedback
+  - Transition: bigger async UI changes (navigating, submitting a form) — user can wait a moment
+
+  `startTransition` tells React "the updates inside here are non-urgent". React:
+  1. Sets `isPending = true` **immediately** — so you can show a spinner right away
+  2. Runs the async function in the background
+  3. Keeps the **current committed UI on screen** while waiting — no blank/broken intermediate states
+  4. When the async function resolves, commits all state updates from inside it **in one batch**
+  5. Sets `isPending = false` in the same commit
+
+  ```tsx
+  const [isPending, startTransition] = useTransition()
+
+  function handleClick() {
+    startTransition(async () => {
+      const data = await savePost()   // server call
+      setResult(data)                 // deferred until server responds
+    })
+    // isPending is already true here — spinner shows instantly
+  }
+  ```
+
+  Key: `isPending` flips to `true` immediately (spinner shows). State updates **inside** the async body are what get deferred until it resolves. They commit together at the end.
+
+- **Form actions wrap `startTransition` automatically:**
+  When you pass a server action to `<form action={...}>`, React internally does:
+  ```ts
+  startTransition(async () => {
+    await yourServerAction(formData)
+  })
+  ```
+  The `<form>` also provides the transition's pending state through React context — so child components can read it.
+
+- **`useFormStatus` — reads the form's pending state:**
+  Must be used inside a child component of the `<form>`. Reads `isPending` from the nearest parent form's transition context.
+  ```tsx
+  // Must be its own component — hooks can't be called conditionally mid-render
+  function SubmitButton() {
+    const { pending } = useFormStatus()
+    return <button disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>
+  }
+
+  function MyForm() {
+    return (
+      <form action={createPost}>
+        <input name="title" />
+        <SubmitButton />  {/* inside the form → can read its pending state */}
+      </form>
+    )
+  }
+  ```
+  `SubmitButton` cannot be inlined directly in `MyForm` — `useFormStatus` must be in a **child component** of the form, not the same component that renders the form.
+
+- **`useActionState` — pending + return value:**
+  When you also need the server action's return value (e.g., validation errors), `useActionState` wraps everything:
+  ```tsx
+  // Server action: receives prevState as first arg, FormData as second
+  async function createPost(prevState: State, formData: FormData): Promise<State> {
+    'use server'
+    const title = formData.get('title')
+    if (!title) return { error: 'Title is required', created: null }
+    await db.createPost(title)
+    return { error: null, created: { title } }
+  }
+
+  function PostForm() {
+    const [state, action, pending] = useActionState(createPost, { error: null, created: null })
+    //     ↑ last return value   ↑ wrapped action    ↑ isPending
+
+    return (
+      <form action={action}>
+        <input name="title" />
+        {state.error && <p>{state.error}</p>}
+        <button disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>
+      </form>
+    )
+  }
+  ```
+  `state` starts as `initialState`, then becomes the return value of the last server action call.
+
+  Rough implementation — it's just `useState` + `useTransition` glued together:
+  ```tsx
+  function useActionState(action, initialState) {
+    const [state, setState] = useState(initialState)
+    const [isPending, startTransition] = useTransition()
+
+    function wrappedAction(formData) {
+      startTransition(async () => {
+        const newState = await action(state, formData)  // passes prevState + formData
+        setState(newState)                               // deferred — commits when transition ends
+      })
+    }
+
+    return [state, wrappedAction, isPending]
+  }
+  ```
+  This is also why the server action receives `prevState` as its first arg — `useActionState` passes the current `state` to it on every call.
+
+- **Full sequence for a form submission:**
+  ```
+  user clicks Submit
+    → React intercepts the native form submit event
+    → startTransition starts
+      → isPending = true → re-render → button shows "Saving..."
+      → POST fires to server with FormData + Next-Action header
+      → server runs createPost(), returns { error: null, created: {...} }
+      → Flight stream arrives, decoded
+      → setState({ error: null, created: {...} }) batched
+    → transition ends
+      → isPending = false + new state committed in one re-render
+      → button shows "Save", success UI appears
+  ```
+
+- **Demo in project:** `src/app/lab/server-fn/` — `PostForm` component shows `useActionState` + `useFormStatus`. 1s fake delay makes the pending state clearly visible. Submit empty fields to see server-side validation errors returned as state.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
