@@ -573,22 +573,6 @@
 
 - Why network calls aren't automatically prerendered: external systems are unreliable — they can fail or take unpredictable time. Prerendering can't be blocked on that. So any network call requires explicit declaration: `<Suspense>` (stream at request time) or `use cache` (cache it, opt into the risk yourself with a defined policy).
 
-- TODO
-  - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
-  - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
-  - Learn how Next.js App Router concepts map to browser Network tab behavior:
-    - hard load vs soft navigation requests
-    - HTML vs RSC payload vs JS/CSS chunks
-    - prerendered static response vs request-time dynamic render
-    - where streaming appears in network timing/waterfall
-  - Learn about SEO features in nextjs
-  - Why nextjs?
-  - what is hydration?
-    - question: solve a bug related to hydration
-  - how does react transition works
-
----
-
 ## How Server and Client Components work in Next.js (full lifecycle)
 
 ### 1. On the server — two passes
@@ -777,3 +761,17 @@ const user = await getUser()                     // same cached result, no 2nd f
 Also deduplicates across multiple server components independently calling the same function — no need to prop-drill from a parent just to avoid duplicate fetches.
 
 Cache is scoped per request — next request starts fresh.
+
+- TODO
+  - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
+  - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
+  - Learn how Next.js App Router concepts map to browser Network tab behavior:
+    - hard load vs soft navigation requests
+    - HTML vs RSC payload vs JS/CSS chunks
+    - prerendered static response vs request-time dynamic render
+    - where streaming appears in network timing/waterfall
+  - Learn about SEO features in nextjs
+  - Why nextjs?
+  - what is hydration?
+    - question: solve a bug related to hydration
+  - how does react transition works
