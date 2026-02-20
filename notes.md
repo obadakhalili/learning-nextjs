@@ -77,6 +77,38 @@
     - client-side cache of RSC payload for navigations
   - Dynamic subtree can still benefit from Data Cache.
 
+- Preloading data pattern
+  - Problem: you need data eventually (when a component renders), but there's blocking work before it that's completely unrelated to that data.
+  - Without preloading: fetch starts only when the component renders — after all the blocking work finishes. Sequential: X + Y.
+  - With preloading: call the fetch function fire-and-forget before the blocking work. Fetch runs in parallel with the blocking work. By the time the component renders, the fetch has a head start. Parallel: max(X, Y).
+  - `React.cache` is what makes it valid: without it, the component's call to the same function would start a second duplicate request. With `React.cache`, the second call returns the same Promise — already resolved if the fetch finished, still in-flight if not. Either way, no second request.
+  - For `fetch`-based functions, automatic request memoization handles deduplication. For ORM/DB functions, wrap explicitly with `React.cache`.
+  - The pattern only applies when the blocking work is completely independent of the preloaded data. If the blocking work depends on the fetch result, you can't preload.
+  ```tsx
+  import { cache } from 'react'
+
+  // React.cache ensures the second call is free (same Promise)
+  const getItem = cache(async (id: string) => {
+    return db.query.items.findFirst({ where: eq(items.id, id) })
+  })
+
+  const preload = (id: string) => {
+    void getItem(id) // fire-and-forget — starts the fetch, doesn't block
+  }
+
+  export default async function Page({ params }) {
+    const { id } = await params
+    preload(id)                          // fetch starts now
+    const isAvailable = await checkIsAvailable()  // unrelated blocking work runs in parallel
+    return isAvailable ? <Item id={id} /> : null
+  }
+
+  async function Item({ id }) {
+    const item = await getItem(id)  // React.cache: same Promise, no second DB call
+    return <div>{item.name}</div>
+  }
+  ```
+
 - Deduplicating fetch requests
   - `fetch` calls are automatically deduplicated within a single render pass (same request lifetime) — same URL + same options → only one actual HTTP request, result shared across all callers. This is request memoization, and it behaves exactly like `React.cache` applied automatically to `fetch`.
   - For across-request deduplication, use the Data Cache: `{ cache: 'force-cache' }` stores the fetch response persistently. Future requests reuse the stored response without hitting the external API.
