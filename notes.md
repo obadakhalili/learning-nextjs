@@ -537,9 +537,15 @@
 
 ## Cache Components (`cacheComponents` flag)
 
-- Without `cacheComponents`: Next.js makes a per-route decision — static or dynamic. If any component in the route reads runtime data (`params`, `cookies()`, `searchParams`, etc.), the **entire route** renders at request time. No build-time prerendering of any part of it.
+- Without `cacheComponents`: Next.js makes a per-route decision — static or dynamic. If any component in the route reads runtime data (`params`, `cookies()`, `searchParams`, etc.), the **entire route** renders at request time. No build-time prerendering of any part of it. Even purely static parts (headings, layout chrome) are re-rendered on every request. Build output: `ƒ` (Dynamic).
 
-- With `cacheComponents`: the decision becomes per-component. Next.js walks the tree at build time and prerendered whatever it can. Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws:
+- With `cacheComponents`: the decision becomes per-component. Next.js walks the tree at build time and prerenders whatever it can. Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws. Static parts are frozen into a shell at build and served instantly. Only the dynamic holes compute at request time. Build output: `◐` (Partial Prerender).
+
+  Example — `/lab/query` reads `searchParams`:
+  - Without flag: `ƒ` — entire page re-rendered on every request, heading included
+  - With flag: `◐` — heading baked into static shell at build, only the `searchParams`-dependent part streams in at request time (behind the Suspense from `loading.tsx`)
+
+- Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws:
   ```
   Error: Uncached data was accessed outside of <Suspense>
   ```
