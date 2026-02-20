@@ -77,6 +77,15 @@
     - client-side cache of RSC payload for navigations
   - Dynamic subtree can still benefit from Data Cache.
 
+- `fetch` caching behavior and `{ cache: 'no-store' }`
+  - In Next.js 14, `fetch` was cached in the Data Cache by default (`force-cache`).
+  - In Next.js 15, that default was flipped — `fetch` is no longer cached in the Data Cache.
+  - But this doesn't matter for static routes: the fetch still runs at build time during prerendering, its result gets baked into the prerendered HTML output, and that output is stored in the Full Route Cache. Every request gets the cached prerendered output. Data Cache is a separate, uninvolved layer.
+  - `{ cache: 'no-store' }` does two things at once:
+    1. Skips the Data Cache (fetch response not stored separately)
+    2. Signals to Next.js "this fetch must run fresh on every request" → Next.js skips prerendering for this route → route becomes dynamic → fetch runs on every request
+  - So `no-store` opts the route out of the Full Route Cache entirely. The second effect (opting out of prerendering) is what actually makes it "opt into dynamic rendering" as the docs say.
+
 - ISR + invalidation
   - ISR = Incremental Static Regeneration.
   - Cached prerendered output can be refreshed when stale/invalidated.
