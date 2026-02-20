@@ -575,6 +575,8 @@
   }
   ```
 
+- When runtime data (e.g. cookies) is needed across many client components, the promise-to-context pattern is more surgical than a coarse `<Suspense>` boundary. A `<Suspense>` wrapper hides an entire subtree behind a fallback. With the promise-to-context pattern, the layout passes the Promise (without awaiting) to a client context provider — layout and all static surroundings stay in the static shell, and only the individual client components that call `use(useContext(...))` suspend on their own as small isolated holes.
+
 - `connection()` from `next/server` is an explicit opt-out from prerendering. Without it, a component with `Math.random()` or `Date.now()` would run at build time — the value gets baked into the static shell and served to every user. `await connection()` signals "run this at request time", making everything after it dynamic. Requires a `<Suspense>` boundary above it for the same reason any dynamic component does.
 
 - `use cache` has two modes depending on context:
