@@ -610,6 +610,8 @@
   - The constraint: runtime APIs (`cookies()`, `headers()`, etc.) cannot be called directly inside `use cache`. Read the value outside in a non-cached component, pass the plain value as a prop. That value becomes part of the cache key.
   - The second mode is similar to `React.cache` but persisted across requests rather than scoped to one request.
 
+- `cacheComponents` replaces the old route segment configs (`dynamic`, `revalidate`, `fetchCache`). Those were blunt, file-level switches because there was no way to be granular — intent had to be declared at the route level. With `cacheComponents`, the rendering unit is the component, not the route, so you express intent where the data lives and the configs become redundant.
+
 - Why network calls aren't automatically prerendered: external systems are unreliable — they can fail or take unpredictable time. Prerendering can't be blocked on that. So any network call requires explicit declaration: `<Suspense>` (stream at request time) or `use cache` (cache it, opt into the risk yourself with a defined policy).
 
 ## How Server and Client Components work in Next.js (full lifecycle)
