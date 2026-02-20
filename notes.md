@@ -77,6 +77,17 @@
     - client-side cache of RSC payload for navigations
   - Dynamic subtree can still benefit from Data Cache.
 
+- Deduplicating fetch requests
+  - `fetch` calls are automatically deduplicated within a single render pass (same request lifetime) — same URL + same options → only one actual HTTP request, result shared across all callers. This is request memoization, and it behaves exactly like `React.cache` applied automatically to `fetch`.
+  - For across-request deduplication, use the Data Cache: `{ cache: 'force-cache' }` stores the fetch response persistently. Future requests reuse the stored response without hitting the external API.
+  - For ORM/DB calls (not `fetch`), request memoization doesn't apply automatically — wrap with `React.cache` manually for the same within-request deduplication effect.
+
+  | Mechanism | Scope | How |
+  |---|---|---|
+  | Request memoization | Same request only | Automatic for `fetch` |
+  | Data Cache | Across requests | `{ cache: 'force-cache' }` |
+  | `React.cache` | Same request only | Manual, for ORM/DB calls |
+
 - `fetch` caching behavior and `{ cache: 'no-store' }`
   - In Next.js 14, `fetch` was cached in the Data Cache by default (`force-cache`).
   - In Next.js 15, that default was flipped — `fetch` is no longer cached in the Data Cache.
