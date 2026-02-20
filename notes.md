@@ -577,6 +577,12 @@
 
 - `connection()` from `next/server` is an explicit opt-out from prerendering. Without it, a component with `Math.random()` or `Date.now()` would run at build time — the value gets baked into the static shell and served to every user. `await connection()` signals "run this at request time", making everything after it dynamic. Requires a `<Suspense>` boundary above it for the same reason any dynamic component does.
 
+- `use cache` has two modes depending on context:
+  - **No runtime deps** → runs at build time, result baked into static shell, revalidated on schedule
+  - **Receives runtime values as props (inside `<Suspense>`)** → runs at request time on first call, caches result keyed by those props, reuses on future requests with same inputs — skips the expensive DB/network work on repeat calls, not the request itself
+  - The constraint: runtime APIs (`cookies()`, `headers()`, etc.) cannot be called directly inside `use cache`. Read the value outside in a non-cached component, pass the plain value as a prop. That value becomes part of the cache key.
+  - The second mode is similar to `React.cache` but persisted across requests rather than scoped to one request.
+
 - Why network calls aren't automatically prerendered: external systems are unreliable — they can fail or take unpredictable time. Prerendering can't be blocked on that. So any network call requires explicit declaration: `<Suspense>` (stream at request time) or `use cache` (cache it, opt into the risk yourself with a defined policy).
 
 ## How Server and Client Components work in Next.js (full lifecycle)
