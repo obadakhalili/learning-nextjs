@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LoginForm } from "./_components/login-form";
 
 export default function LabIndexPage() {
   return (
@@ -92,7 +91,6 @@ export default function LabIndexPage() {
           is served by <code>route.ts</code>.
         </li>
       </ul>
-      <LoginForm />
     </div>
   );
 }

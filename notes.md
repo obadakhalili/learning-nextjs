@@ -378,6 +378,7 @@
       - This is why Page (no Suspense wrapper) blocks the stream, but Reviews (inside Suspense) doesn't.
       - Output: the RSC payload.
     - RSC payload looks like (simplified):
+
       ```
       ["$","h1",null,{"children":"Keyboard"}]
       ["$","p",null,{"children":"$99"}]
@@ -387,6 +388,7 @@
 
       - Server components are fully resolved -- only their output (h1, p, div) appears, not component code.
       - Client components appear as references with serialized props.
+
     - Pass 2 -- SSR render:
       - Takes the RSC payload from pass 1.
       - For server component output: converts resolved JSX to HTML strings. No re-execution.
@@ -1121,6 +1123,10 @@ Cache is scoped per request — next request starts fresh.
 
 - **The `use cache` parallel in the component world:** same pattern applies — dynamic parent component (reads `cookies()`) with an expensive child whose data should be cached → `use cache` on the child component. Both worlds need explicit `use cache` for this case; the only case you don't need it is a fully static unit (component or handler), which is prerendered automatically.
 
+## Hydration mismatches caused by browser extensions
+
+- Extensions can modify the DOM before React hydrates, causing false hydration warnings. To confirm it's extension-caused: reproduce in incognito. In production, just filter the error in your monitoring tool — you can't control user extensions.
+
 ## Proxy (formerly Middleware)
 
 - Renamed from Middleware to Proxy in Next.js 16. A `proxy.ts` file at the project root that intercepts every request before it hits a page — can redirect, rewrite, or modify headers. Runs in the Edge runtime (not Node.js — no `fs`, no DB clients), so it's fast and globally distributed but limited to Web standard APIs only. Use for cheap checks (auth cookie present? redirect to login), not slow data fetching.
@@ -1141,3 +1147,4 @@ Cache is scoped per request — next request starts fresh.
   - what is hydration?
     - question: solve a bug related to hydration
   - how does react transition works
+  - the loading thing in /account & /billing
