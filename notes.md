@@ -1141,6 +1141,18 @@ Cache is scoped per request — next request starts fresh.
 
 - The right split: Proxy = fast pre-filter for browsers (UX — redirects unauthenticated users early). DAL (Data Access Layer) = actual security boundary. `verifySession()` called inside every data-fetching function and Server Action, right before the query. Can't be bypassed by hitting a different URL or calling an action directly.
 
+- **Hiding UI is UX, not security.** Every data access point — Server Actions, Route Handlers, data-fetching functions — must check authorization independently, regardless of what the UI shows or doesn't show. In a SPA + separate backend, the API is a system you explicitly built and secured — hiding UI and securing the API are clearly two separate concerns. In Next.js, Server Actions and Route Handlers are implicitly HTTP endpoints colocated in the app, so it's easy to forget they're callable independently of any UI. A non-admin can call a Server Action directly without ever loading the page:
+
+  ```bash
+  curl -X POST https://myapp.com/admin \
+    -H "Next-Action: abc123" \
+    -d '["user-id-here"]'
+  ```
+
+  Page returning `null`, button not rendering — irrelevant. The action runs. Auth must be inside the action itself.
+
+- **Don't put auth checks in layouts.** Layouts don't re-render on soft navigation — only on hard navigation. So an auth check in a layout only fires when the user first loads the page. If the session expires mid-session, the user can keep navigating via `<Link>` clicks and the layout never re-runs the check. The DAL fixes this: `verifySession()` is called inside every data-fetching function and Server Action, which always runs fresh on every request regardless of navigation type. Layout re-rendering is a rendering concern. Data fetching is a request concern — different lifecycle. Layout can still call `getUser()` for UI purposes (avatar, name in nav) — just don't put the `if (!user) redirect()` there.
+
 - **DAL is not a Next.js concept.** It's just a pattern — a regular TypeScript file with functions that verify the session and fetch data. No special file name, no framework magic. The docs name it "DAL" to give the pattern a label. The only Next.js-adjacent touch is wrapping those functions with `React.cache` to deduplicate the session check within a request — but that's a React primitive, not Next.js-specific.
 
 - **DTO = specific getters per page/component that return only what that context needs.** Not a Next.js concept either — just a label for the idea of not letting raw DB rows travel through the app. Each getter shapes its own return value. Add a sensitive column to the DB → update one place, not every fetch.
