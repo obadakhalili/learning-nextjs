@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSession, deleteSession } from "./session";
+import { createSession, deleteSession } from "../lib/session";
 import { users } from "../data";
 
 interface LoginFormState {

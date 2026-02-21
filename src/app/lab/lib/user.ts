@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { decrypt } from "../user/session";
+import { decrypt } from "./session";
 import { users } from "../data";
 
 export const getUser = cache(async () => {
