@@ -1131,6 +1131,16 @@ Cache is scoped per request — next request starts fresh.
 
 - Renamed from Middleware to Proxy in Next.js 16. A `proxy.ts` file at the project root that intercepts every request before it hits a page — can redirect, rewrite, or modify headers. Runs in the Edge runtime (not Node.js — no `fs`, no DB clients), so it's fast and globally distributed but limited to Web standard APIs only. Use for cheap checks (auth cookie present? redirect to login), not slow data fetching.
 
+- **Proxy for authorization: useful but not sufficient.** Proxy can only answer one question: "is this person authenticated?" (cookie present and valid). It cannot answer "is this person authorized to do or see this specific thing?" — because that requires a DB query and business logic, neither of which are available in the Edge runtime.
+
+- Two levels of access control:
+  - **Authentication** — who are you? Proxy can handle this via cookie check.
+  - **Authorization** — what are you allowed to do/see? Proxy can't handle this. It's resource-specific and needs data.
+
+- Proxy is also brittle for authorization: you'd have to maintain a list of protected routes and keep it in sync as the app grows. Server Actions don't have their own URLs (they POST to the current page URL with a `Next-Action` header) — Proxy sees the page URL, not which action is being invoked. No way to gate per-action.
+
+- The right split: Proxy = fast pre-filter for browsers (UX — redirects unauthenticated users early). DAL (Data Access Layer) = actual security boundary. `verifySession()` called inside every data-fetching function and Server Action, right before the query. Can't be bypassed by hitting a different URL or calling an action directly.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
