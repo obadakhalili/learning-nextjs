@@ -1143,6 +1143,40 @@ Cache is scoped per request — next request starts fresh.
 
 - **DAL is not a Next.js concept.** It's just a pattern — a regular TypeScript file with functions that verify the session and fetch data. No special file name, no framework magic. The docs name it "DAL" to give the pattern a label. The only Next.js-adjacent touch is wrapping those functions with `React.cache` to deduplicate the session check within a request — but that's a React primitive, not Next.js-specific.
 
+- **DTO = specific getters per page/component that return only what that context needs.** Not a Next.js concept either — just a label for the idea of not letting raw DB rows travel through the app. Each getter shapes its own return value. Add a sensitive column to the DB → update one place, not every fetch.
+
+- **How DAL and DTO compose:** DAL functions (`verifySession`, `getUser`) answer "are you allowed to proceed?". DTO functions are the specific getters — they call DAL internally for auth, then fetch and return only the relevant fields. Pages and Server Actions call the DTO getter for their context and never touch raw DB rows or auth logic directly.
+
+  ```ts
+  // DAL — auth primitives
+  export const verifySession = cache(async () => { /* decrypt cookie, redirect if invalid */ })
+  export const getUser = cache(async () => { /* calls verifySession, returns current user */ })
+
+  // DTO — specific getters per context
+  export async function getPublicProfileDTO(slug: string) {
+    const user = await db.query.users.findFirst({ where: eq(users.slug, slug) })
+    return { name: user.name }                          // public — no auth needed
+  }
+
+  export async function getOwnProfileDTO() {
+    const { userId } = await verifySession()            // DAL: must be logged in
+    const user = await db.query.users.findFirst({ where: eq(users.id, userId) })
+    return { name: user.name, email: user.email, phone: user.phone }
+  }
+
+  export async function getAdminUserDTO(targetId: string) {
+    const currentUser = await getUser()                 // DAL: get current user
+    if (!currentUser.isAdmin) throw new Error('Unauthorized')
+    const user = await db.query.users.findFirst({ where: eq(users.id, targetId) })
+    return { name: user.name, email: user.email, internalNotes: user.internalNotes }
+  }
+
+  // Pages just call the right getter — no auth logic, no raw rows
+  const profile = await getPublicProfileDTO(slug)
+  const profile = await getOwnProfileDTO()
+  const user    = await getAdminUserDTO(id)
+  ```
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
