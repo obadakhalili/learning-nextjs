@@ -1048,6 +1048,34 @@ Cache is scoped per request — next request starts fresh.
 
 - **Demo in project:** `src/app/lab/server-fn/` — `PostForm` component shows `useActionState` + `useFormStatus`. 1s fake delay makes the pending state clearly visible. Submit empty fields to see server-side validation errors returned as state.
 
+## Route Handlers
+
+- A `route.ts` file instead of `page.tsx`. Export HTTP verb functions (`GET`, `POST`, etc.), return a plain `Response`. No UI, no layouts, no client-side navigation — just an API endpoint.
+
+- **Caching without `cacheComponents`:** blunt, all-or-nothing. Same as the old route segment configs. Force the entire handler to be treated as static with `export const dynamic = 'force-static'` — Next.js runs it at build time, caches the whole `Response` in Full Route Cache. Only works for `GET`. `POST`/`PUT`/`DELETE` are never cached (they're mutations).
+
+- **Caching with `cacheComponents`:** same model as page components. Fully static handler (no dynamic APIs) → prerendered at build automatically. Touches dynamic APIs (`request.headers`, `cookies()`, `Math.random()`) → runs at request time. No config needed either way.
+
+- **`use cache` in a helper function = Data Cache caching, not prerendering.** For the case where the handler is dynamic (can't be prerendered) but has an expensive sub-operation you want cached across requests:
+  ```ts
+  export async function GET(request: Request) {
+    const ua = request.headers.get('user-agent')  // dynamic — always runs fresh
+    const products = await getProducts()           // Data Cache — skipped on repeat calls
+    return Response.json({ ua, products })
+  }
+
+  async function getProducts() {
+    'use cache'
+    cacheLife('hours')
+    return db.query('SELECT * FROM products')
+  }
+  ```
+  First request → `getProducts()` runs, result stored. Second request → handler runs again (dynamic, always does), but `getProducts()` returns cached result — no DB call. This is the same second mode of `use cache` from the cache components notes: "runs at request time on first call, caches result keyed by inputs, reuses on future requests."
+
+- `use cache` can't go directly in the handler body — must be in a helper function. The handler is the route entry point Next.js controls; `use cache` needs to mark a self-contained function whose output is independently cacheable.
+
+- **The `use cache` parallel in the component world:** same pattern applies — dynamic parent component (reads `cookies()`) with an expensive child whose data should be cached → `use cache` on the child component. Both worlds need explicit `use cache` for this case; the only case you don't need it is a fully static unit (component or handler), which is prerendered automatically.
+
 ## Proxy (formerly Middleware)
 
 - Renamed from Middleware to Proxy in Next.js 16. A `proxy.ts` file at the project root that intercepts every request before it hits a page — can redirect, rewrite, or modify headers. Runs in the Edge runtime (not Node.js — no `fs`, no DB clients), so it's fast and globally distributed but limited to Web standard APIs only. Use for cheap checks (auth cookie present? redirect to login), not slow data fetching.
