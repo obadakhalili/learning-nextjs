@@ -1048,6 +1048,10 @@ Cache is scoped per request — next request starts fresh.
 
 - **Demo in project:** `src/app/lab/server-fn/` — `PostForm` component shows `useActionState` + `useFormStatus`. 1s fake delay makes the pending state clearly visible. Submit empty fields to see server-side validation errors returned as state.
 
+## Proxy (formerly Middleware)
+
+- Renamed from Middleware to Proxy in Next.js 16. A `proxy.ts` file at the project root that intercepts every request before it hits a page — can redirect, rewrite, or modify headers. Runs in the Edge runtime (not Node.js — no `fs`, no DB clients), so it's fast and globally distributed but limited to Web standard APIs only. Use for cheap checks (auth cookie present? redirect to login), not slow data fetching.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
