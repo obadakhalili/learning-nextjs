@@ -1127,6 +1127,19 @@ Cache is scoped per request — next request starts fresh.
 
 - Extensions can modify the DOM before React hydrates, causing false hydration warnings. To confirm it's extension-caused: reproduce in incognito. In production, just filter the error in your monitoring tool — you can't control user extensions.
 
+## BFF (Backend for Frontend)
+
+- **BFF as a concept:** a server that sits between the frontend and backend services — owned by the frontend team, shaped for the frontend's needs. Instead of the frontend talking directly to a general-purpose API (wrong shape, too much data, multiple round trips), the BFF aggregates, transforms, and exposes exactly what the frontend needs. One call instead of three, right shape, no leaking internals.
+
+- **BFF in Next.js:** Next.js isn't a full backend (no built-in DB, job queues, WebSocket server, etc.), but Route Handlers give you public HTTP endpoints and Proxy gives you request interception — enough to play the BFF role. The BFF guide isn't introducing new concepts; it's framing Route Handlers and Proxy under the BFF use case and adding practical security/usage guidance (auth, validation, rate limiting) around them.
+
+- **Don't call Route Handlers from Server Components.** Server Components should fetch directly from the data source (DB, external API). Calling a Route Handler from a Server Component has two problems:
+  - At build time: fails — no server is listening to handle the request during the build step
+  - At runtime: slower — unnecessary HTTP round trip to your own server and back
+  - Fix: extract the shared logic into a plain function, call it directly from both the Server Component and the Route Handler.
+
+- **Don't use Server Actions for data fetching.** Server Actions are queued and designed for mutations only. Using them as a data fetching mechanism introduces sequential bottlenecks. Fetch data in Server Components directly; use Server Actions only for mutations.
+
 ## Proxy (formerly Middleware)
 
 - Renamed from Middleware to Proxy in Next.js 16. A `proxy.ts` file at the project root that intercepts every request before it hits a page — can redirect, rewrite, or modify headers. Runs in the Edge runtime (not Node.js — no `fs`, no DB clients), so it's fast and globally distributed but limited to Web standard APIs only. Use for cheap checks (auth cookie present? redirect to login), not slow data fetching.
