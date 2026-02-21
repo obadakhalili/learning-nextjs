@@ -1,3 +1,22 @@
+
+## What is Next.js?
+
+nextjs is a fullstack typescript framework
+its main feature that it is popular for is flexible rendering strategies (static, ISR, dynamic, PPR) enabling SEO and improving core web vitals, but the framework has more to offer
+such as:
+- one project for the FE & BE, which allows for sharing common types and utils
+- file-based routing
+- different caching and optimization techniques enhancing core web vitals, such as FCP, TTI, TTFB
+- calling server functions from the client, blurring the boundary between the FE & BE and removing the need for hand-written API endpoints and contracts
+
+**Rendering strategies:**
+- **Static** — route is rendered at build time. Same HTML served to every user. Fastest possible response, fully cacheable. Good for content that doesn't change per-request (marketing pages, docs).
+- **ISR (Incremental Static Regeneration)** — like static, but with a revalidation window. Cached output is served until it goes stale, then regenerated in the background. Good for content that changes occasionally (blog posts, product pages).
+- **Dynamic** — route is rendered at request time. Runs fresh for every user. Required when output depends on request-specific data (cookies, headers, searchParams). No Full Route Cache.
+- **PPR (Partial Prerendering)** — static and dynamic in the same route. The static shell is prerendered at build time. Dynamic holes stream in at request time behind Suspense boundaries. Best of both: instant shell + fresh per-request data.
+
+---
+
 - Route wrappers: `layout.tsx` vs `template.tsx`
   - `layout.tsx` is the persistent wrapper for a segment.
   - `template.tsx` is the reset wrapper; it remounts on child-route navigation.
@@ -1273,7 +1292,6 @@ Request memoization (deduplication within a render pass) only applies inside the
     - where streaming appears in network timing/waterfall
   - Learn about SEO features in nextjs
   - Why nextjs?
-  - what is hydration?
-    - question: solve a bug related to hydration
+  - question: solve a bug related to hydration
   - how does react transition works
   - the loading thing in /account & /billing
