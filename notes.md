@@ -1141,6 +1141,8 @@ Cache is scoped per request — next request starts fresh.
 
 - The right split: Proxy = fast pre-filter for browsers (UX — redirects unauthenticated users early). DAL (Data Access Layer) = actual security boundary. `verifySession()` called inside every data-fetching function and Server Action, right before the query. Can't be bypassed by hitting a different URL or calling an action directly.
 
+- **DAL is not a Next.js concept.** It's just a pattern — a regular TypeScript file with functions that verify the session and fetch data. No special file name, no framework magic. The docs name it "DAL" to give the pattern a label. The only Next.js-adjacent touch is wrapping those functions with `React.cache` to deduplicate the session check within a request — but that's a React primitive, not Next.js-specific.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
