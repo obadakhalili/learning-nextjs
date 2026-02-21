@@ -1202,6 +1202,64 @@ Cache is scoped per request — next request starts fresh.
   const user    = await getAdminUserDTO(id)
   ```
 
+## Caching in Next.js — full picture
+
+You already know the four cache layers and most of their behavior. This section fills in the gaps from the full caching guide.
+
+### The four layers — quick reference
+
+| Layer | Where | Scope | Duration |
+|---|---|---|---|
+| Request Memoization | Server | Same render pass | Cleared after render |
+| Data Cache | Server | Across requests + deployments | Persistent (revalidatable) |
+| Full Route Cache | Server | Across requests + deployments | Persistent (revalidatable) |
+| Router Cache | Client (memory) | User session | Session or time-based |
+
+### How the layers interact (important)
+
+- **Data Cache → Full Route Cache: one-way cascade.** Revalidating or opting out of Data Cache invalidates Full Route Cache too (render output depends on data). The reverse is NOT true — opting out of Full Route Cache (dynamic rendering) does NOT affect Data Cache. Practical: a dynamic route can still cache expensive sub-fetches in Data Cache; only the route shell re-renders on every request.
+- **Data Cache → Router Cache: only via Server Actions.** `revalidateTag`/`revalidatePath` in a Server Action invalidates both. Same calls from a Route Handler invalidate Data Cache + Full Route Cache, but NOT Router Cache immediately — Router Cache only clears on hard refresh or after the automatic invalidation period. Route Handlers aren't tied to a specific route, so Next.js can't know which Router Cache entries to purge.
+
+### Time-based vs on-demand revalidation (Data Cache)
+
+Two ways to revalidate Data Cache. Key behavioral difference:
+
+- **Time-based** (`next.revalidate: 3600`): stale-while-revalidate. After the window expires, the NEXT request still gets stale data — but it triggers a background revalidation. Fresh data is stored. The request after that gets fresh. Nobody ever waits.
+- **On-demand** (`revalidateTag('posts')` / `revalidatePath('/')`): immediate purge. Cache entry is deleted right now. The next request is a MISS — fetches fresh and stores it. This is a true cache invalidation (what we discussed before as "invalidation" vs "revalidation").
+
+```ts
+// time-based — baked into the fetch
+fetch('https://...', { next: { revalidate: 3600 } }) // stale-while-revalidate, hourly
+
+// on-demand — called from Server Action or Route Handler
+revalidateTag('posts')   // purge by tag
+revalidatePath('/blog')  // purge by path (also re-renders the route)
+```
+
+### `revalidatePath` vs `router.refresh`
+
+Easy to confuse:
+- `revalidatePath('/path')` — server-side. Purges Data Cache + Full Route Cache for that path. If called from a Server Action, also purges Router Cache.
+- `router.refresh()` — client-side. Only clears Router Cache and re-fetches the current route's RSC payload from the server. Does NOT touch Data Cache or Full Route Cache. The server re-renders with whatever is in the Data Cache. Good for "refresh the page without a full reload."
+
+### Router Cache — details
+
+Already noted: stale time = 0 for dynamic pages in Next.js 15. More:
+- **Session-scoped**: entire cache is cleared on page refresh.
+- **What's cached differently**: layouts and `loading.tsx` fallbacks are cached for 5 min (static routes) or a shorter window (dynamic). Page segments are NOT cached by default in Next.js 15 (stale time = 0) — back/forward still restores from cache though.
+- **Cookie mutations invalidate it**: `cookies.set` / `cookies.delete` in a Server Action also clears Router Cache. Reason: if you log in or out, cached RSC payloads (which may have been rendered for the old auth state) must not be served.
+
+### `fetch` is not memoized in Route Handlers
+
+Request memoization (deduplication within a render pass) only applies inside the React component tree — Layouts, Pages, Server Components, `generateMetadata`, `generateStaticParams`. Route Handlers are NOT part of the component tree, so `fetch` calls there are not deduplicated automatically.
+
+### `generateStaticParams` — on-demand static generation
+
+- Paths returned by `generateStaticParams` → pre-rendered at build time, stored in Full Route Cache.
+- Paths NOT returned but visited at runtime → rendered on first request, then cached in Full Route Cache (on-demand static generation). Not just dynamic — cached after first hit.
+- `export const dynamicParams = false` → unlisted paths 404 instead of being rendered on first visit.
+- Return empty array → nothing pre-rendered at build, everything rendered on first visit and cached.
+
 - TODO
   - Learn how Server Components work internally, how Client Components are served, and why extracting only client-required parts minimizes client JS.
   - Revisit: https://nextjs.org/docs/app/getting-started/layouts-and-pages#what-to-use-and-when
