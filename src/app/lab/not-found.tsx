@@ -7,7 +7,10 @@ export default function LabNotFound() {
       <p className="text-sm">
         This page appears when a route calls <code>notFound()</code>.
       </p>
-      <Link className="inline-block rounded-md bg-amber-800 px-3 py-2 text-sm text-white" href="/lab">
+      <Link
+        className="inline-block rounded-md bg-amber-800 px-3 py-2 text-sm text-white"
+        href="/lab"
+      >
         Back to /lab
       </Link>
     </div>

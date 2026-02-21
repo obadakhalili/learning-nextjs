@@ -5,7 +5,9 @@ import { greet } from "../actions";
 
 export default function Greeter() {
   const [name, setName] = useState("");
-  const [result, setResult] = useState<Awaited<ReturnType<typeof greet>> | null>(null);
+  const [result, setResult] = useState<Awaited<
+    ReturnType<typeof greet>
+  > | null>(null);
 
   async function handleClick() {
     const response = await greet(name);

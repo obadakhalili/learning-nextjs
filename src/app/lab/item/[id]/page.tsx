@@ -16,7 +16,10 @@ export default async function ItemPage({ params }: ItemPageProps) {
       <p className="text-sm text-slate-700">
         You see this on hard nav (refresh/direct entry).
       </p>
-      <Link className="inline-block rounded-md bg-slate-900 px-3 py-2 text-sm text-white" href="/lab/shop">
+      <Link
+        className="inline-block rounded-md bg-slate-900 px-3 py-2 text-sm text-white"
+        href="/lab/shop"
+      >
         Back to shop
       </Link>
     </article>

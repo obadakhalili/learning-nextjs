@@ -17,14 +17,22 @@ export default function LabLayout({
           <section className="rounded-xl bg-white p-6 shadow-sm">
             {/* at build time, static routes are completely prerendered, while dynamic components (like LabNav because it uses usePathname) are ignored */}
             {/* if cacheComponents is enabled, it will try to prerender all components including dynamic ones by partially prerendering them (replacing dynamic holes with static fallback shells), so if cacheComponents is enabled LabNav will cause a build time error */}
-            <Suspense fallback={<div className="animate-pulse text-slate-400">Loading user...</div>}>
+            <Suspense
+              fallback={
+                <div className="animate-pulse text-slate-400">
+                  Loading user...
+                </div>
+              }
+            >
               <LabNav />
             </Suspense>
             {children}
           </section>
 
           <aside className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-2 text-lg font-semibold">Parallel Slot: @inspector</h2>
+            <h2 className="mb-2 text-lg font-semibold">
+              Parallel Slot: @inspector
+            </h2>
             <div className="text-sm text-slate-700">{inspector}</div>
           </aside>
         </div>

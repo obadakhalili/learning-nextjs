@@ -48,9 +48,7 @@ export default function PostForm() {
           />
         </div>
 
-        {state.error && (
-          <p className="text-sm text-red-600">{state.error}</p>
-        )}
+        {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
         {/* SubmitButton is inside the form — useFormStatus can read the form's pending state */}
         <SubmitButton />

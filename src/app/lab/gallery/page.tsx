@@ -13,17 +13,21 @@ export default function GalleryPage() {
       <p className="text-sm text-slate-700">
         Click a photo link with client navigation from this page.
         <br />
-        URL changes to <code>/lab/photo/[id]</code>, but the intercepted route renders in{" "}
-        <code>@inspector</code>.
+        URL changes to <code>/lab/photo/[id]</code>, but the intercepted route
+        renders in <code>@inspector</code>.
       </p>
       <p className="text-sm text-slate-700">
-        Refresh on <code>/lab/photo/[id]</code> to see the canonical page instead.
+        Refresh on <code>/lab/photo/[id]</code> to see the canonical page
+        instead.
       </p>
 
       <ul className="space-y-2 text-sm">
         {photos.map((photo) => (
           <li key={photo.id}>
-            <Link className="text-blue-700 underline" href={`/lab/photo/${photo.id}`}>
+            <Link
+              className="text-blue-700 underline"
+              href={`/lab/photo/${photo.id}`}
+            >
               Open photo {photo.id}: {photo.title}
             </Link>
           </li>

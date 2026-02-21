@@ -5,6 +5,7 @@
     - `layout.tsx` is not "never re-render".
     - It is usually reused across child-route transitions, but can still update/re-enter/reload.
   - Drawing:
+
     ```text
     navigate /dashboard/a -> /dashboard/b
 
@@ -84,28 +85,29 @@
   - `React.cache` is what makes it valid: without it, the component's call to the same function would start a second duplicate request. With `React.cache`, the second call returns the same Promise — already resolved if the fetch finished, still in-flight if not. Either way, no second request.
   - For `fetch`-based functions, automatic request memoization handles deduplication. For ORM/DB functions, wrap explicitly with `React.cache`.
   - The pattern only applies when the blocking work is completely independent of the preloaded data. If the blocking work depends on the fetch result, you can't preload.
+
   ```tsx
-  import { cache } from 'react'
+  import { cache } from "react";
 
   // React.cache ensures the second call is free (same Promise)
   const getItem = cache(async (id: string) => {
-    return db.query.items.findFirst({ where: eq(items.id, id) })
-  })
+    return db.query.items.findFirst({ where: eq(items.id, id) });
+  });
 
   const preload = (id: string) => {
-    void getItem(id) // fire-and-forget — starts the fetch, doesn't block
-  }
+    void getItem(id); // fire-and-forget — starts the fetch, doesn't block
+  };
 
   export default async function Page({ params }) {
-    const { id } = await params
-    preload(id)                          // fetch starts now
-    const isAvailable = await checkIsAvailable()  // unrelated blocking work runs in parallel
-    return isAvailable ? <Item id={id} /> : null
+    const { id } = await params;
+    preload(id); // fetch starts now
+    const isAvailable = await checkIsAvailable(); // unrelated blocking work runs in parallel
+    return isAvailable ? <Item id={id} /> : null;
   }
 
   async function Item({ id }) {
-    const item = await getItem(id)  // React.cache: same Promise, no second DB call
-    return <div>{item.name}</div>
+    const item = await getItem(id); // React.cache: same Promise, no second DB call
+    return <div>{item.name}</div>;
   }
   ```
 
@@ -114,11 +116,11 @@
   - For across-request deduplication, use the Data Cache: `{ cache: 'force-cache' }` stores the fetch response persistently. Future requests reuse the stored response without hitting the external API.
   - For ORM/DB calls (not `fetch`), request memoization doesn't apply automatically — wrap with `React.cache` manually for the same within-request deduplication effect.
 
-  | Mechanism | Scope | How |
-  |---|---|---|
-  | Request memoization | Same request only | Automatic for `fetch` |
-  | Data Cache | Across requests | `{ cache: 'force-cache' }` |
-  | `React.cache` | Same request only | Manual, for ORM/DB calls |
+  | Mechanism           | Scope             | How                        |
+  | ------------------- | ----------------- | -------------------------- |
+  | Request memoization | Same request only | Automatic for `fetch`      |
+  | Data Cache          | Across requests   | `{ cache: 'force-cache' }` |
+  | `React.cache`       | Same request only | Manual, for ORM/DB calls   |
 
 - `fetch` caching behavior and `{ cache: 'no-store' }`
   - In Next.js 14, `fetch` was cached in the Data Cache by default (`force-cache`).
@@ -335,6 +337,7 @@
   - `'use client'` is a module-graph boundary: everything imported from a `'use client'` file is in the client graph.
 
   - Example app tree used throughout:
+
     ```tsx
     // Page (server component, async)
     export default async function Page() {
@@ -381,6 +384,7 @@
       ["$","$Ladd-to-cart-button",null,{"productId":42,"price":99}]  <- reference, not rendered
       ["$","$Suspense",null,{"fallback":"Loading reviews...","children":"$pending"}]
       ```
+
       - Server components are fully resolved -- only their output (h1, p, div) appears, not component code.
       - Client components appear as references with serialized props.
     - Pass 2 -- SSR render:
@@ -392,16 +396,24 @@
       - For pending Suspense boundaries: outputs the fallback HTML.
       - Output: HTML string.
     - Server streams the response (chunked):
+
       ```html
       <!-- first chunk -->
       <h1>Keyboard</h1>
       <p>$99</p>
-      <button>Add 1 to cart</button>        <!-- client component HTML from SSR pass -->
-      <p>Loading reviews...</p>              <!-- Suspense fallback -->
+      <button>Add 1 to cart</button>
+      <!-- client component HTML from SSR pass -->
+      <p>Loading reviews...</p>
+      <!-- Suspense fallback -->
 
-      <script>self.__next_f.push([...])</script>   <!-- RSC payload stored for React -->
-      <script src="/add-to-cart-button.js"></script> <!-- client component JS bundle -->
+      <script>
+        self.__next_f.push([...])
+      </script>
+      <!-- RSC payload stored for React -->
+      <script src="/add-to-cart-button.js"></script>
+      <!-- client component JS bundle -->
       ```
+
     - `self.__next_f.push` explained:
       - React hasn't loaded yet when the browser starts parsing HTML.
       - Next.js embeds RSC payload in inline `<script>` tags that push data into a global array.
@@ -446,9 +458,13 @@
     - When it finishes, server runs RSC + SSR for that boundary, streams another chunk:
       ```html
       <script>
-      $RC("reviews-boundary", "<div>Great keyboard!</div><div>Love it</div>")
+        $RC("reviews-boundary", "<div>Great keyboard!</div><div>Love it</div>");
       </script>
-      <script>self.__next_f.push([/* RSC payload update */])</script>
+      <script>
+        self.__next_f.push([
+          /* RSC payload update */
+        ]);
+      </script>
       ```
     - Browser executes the script. React swaps "Loading reviews..." for the actual reviews.
     - This is the same streaming model from earlier notes: t0 shell, t1 chunk, t2 swap.
@@ -487,23 +503,25 @@
     - You cannot import a server component inside a `'use client'` file.
       The import makes it join the client module graph -- it stops being a server component.
     - The only way is through props (not just `children` -- any prop works):
+
       ```tsx
       // page.tsx (server component -- the orchestrator)
-      import Modal from './modal'       // client
-      import CartItems from './cart-items' // server
-      import CartTotal from './cart-total' // server
+      import Modal from "./modal"; // client
+      import CartItems from "./cart-items"; // server
+      import CartTotal from "./cart-total"; // server
 
       export default function Page() {
         return (
           <Modal
-            header={<CartItems />}    // server component rendered first, passed as prop
-            footer={<CartTotal />}    // same -- any prop works, not just children
+            header={<CartItems />} // server component rendered first, passed as prop
+            footer={<CartTotal />} // same -- any prop works, not just children
           >
             <p>Your cart</p>
           </Modal>
-        )
+        );
       }
       ```
+
     - The server component that imports both is the orchestrator.
       It renders server components on the server, passes their output as serialized JSX to the client component.
       The client component receives them as opaque React elements and renders them wherever it wants.
@@ -523,6 +541,7 @@
     - On click: layouts + loading fallback commit instantly, dynamic page content streams in after.
     - The loading fallback does NOT replace the layout. It sits inside the layout's `{children}` slot.
     - Drawing:
+
       ```text
       /shop/[id] with ShopLayout (sidebar) + loading.tsx + page.tsx (dynamic)
 
@@ -538,6 +557,7 @@
 
       then: server finishes page.tsx → skeleton swaps for real content
       ```
+
   - Without `loading.tsx` on a dynamic route: nothing committable is prefetched.
     Old page stays visible until server finishes everything. Then one big swap.
   - Override with `<Link prefetch={true}>` to force full prefetch even for dynamic routes
@@ -598,6 +618,7 @@
   - With flag: `◐` — heading baked into static shell at build, only the `searchParams`-dependent part streams in at request time (behind the Suspense from `loading.tsx`)
 
 - Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws:
+
   ```
   Error: Uncached data was accessed outside of <Suspense>
   ```
@@ -624,12 +645,12 @@
   export default function QueryPage({ searchParams }) {
     return (
       <article>
-        <h1>searchParams demo</h1>        {/* static — in shell */}
+        <h1>searchParams demo</h1> {/* static — in shell */}
         <Suspense fallback={<p>Loading...</p>}>
-          <SearchResults searchParams={searchParams} />  {/* dynamic only */}
+          <SearchResults searchParams={searchParams} /> {/* dynamic only */}
         </Suspense>
       </article>
-    )
+    );
   }
   ```
 
@@ -638,19 +659,20 @@
 - `revalidateTag` vs `updateTag`:
   - `revalidateTag`: marks the cache entry as stale. Current request still gets old cached data. Next request triggers background revalidation (stale-while-revalidate). Use when slight staleness is acceptable.
   - `updateTag`: expires the cache AND immediately re-computes within the same request. Response includes fresh data. Use when the update must be reflected right away.
+
   ```ts
   // eventual consistency — okay for blog posts
   export async function createPost(post: FormData) {
-    'use server'
-    await db.insertPost(post)
-    revalidateTag('posts') // next visitor may briefly see old list
+    "use server";
+    await db.insertPost(post);
+    revalidateTag("posts"); // next visitor may briefly see old list
   }
 
   // immediate consistency — required for cart
   export async function addToCart(itemId: string) {
-    'use server'
-    await db.insertCartItem(itemId)
-    updateTag('cart') // same response already reflects updated cart
+    "use server";
+    await db.insertCartItem(itemId);
+    updateTag("cart"); // same response already reflects updated cart
   }
   ```
 
@@ -673,6 +695,7 @@
 **Pass 1 — RSC render (Flight render)**
 
 React walks the component tree top-down:
+
 - **Server Component** → fully executes (including `await`), produces concrete JSX (divs, text, etc.)
 - **Client Component** → NOT executed. Records a reference to its JS bundle file + serialized props from parent.
 
@@ -691,6 +714,7 @@ Output is the **RSC Payload**, a streaming format:
 **Pass 2 — SSR render (HTML generation)**
 
 React takes the RSC Payload and does a second pass to produce HTML. This time it **does** execute client components, but limited:
+
 - `useState(0)` → returns `0` (initial value only)
 - `useEffect` → skipped
 - `onClick` → ignored (HTML can't have JS handlers)
@@ -706,6 +730,7 @@ Browser receives HTML, renders it immediately with built-in parser. No JS needed
 
 **Step 2 — RSC Payload reconciliation**
 React JS loads and reads the RSC Payload (delivered via `self.__next_f.push` script tags in the HTML). Builds internal virtual tree:
+
 - Server component output → concrete nodes
 - Client component references → React knows "component #1 is LikeButton with props {likes: 42}"
 
@@ -713,6 +738,7 @@ Reconciles this tree against existing DOM — confirming the DOM matches expecta
 
 **Step 3 — Hydration**
 React walks DOM and virtual tree side-by-side. For each Client Component:
+
 - Executes the component function for real (working `useState`, `useReducer`, etc.)
 - Does NOT create new DOM — adopts existing nodes
 - Attaches event handlers (`onClick`, `onChange`)
@@ -725,6 +751,7 @@ Page is now fully interactive.
 No HTML generated. Only one pass:
 
 Client sends request with **Router State Tree** (which layouts are already mounted). Server:
+
 1. Skips already-mounted layouts
 2. Runs RSC render (Pass 1 only) for new/changed segments
 3. Streams back RSC Payload
@@ -735,12 +762,12 @@ No SSR. No HTML. No hydration. That's why soft nav is faster.
 
 ### What runs where — summary
 
-| | Server Component | Client Component |
-|---|---|---|
-| RSC render (Pass 1) | Fully executed | NOT executed — recorded as reference |
-| SSR render (Pass 2) | Already resolved to output | Executed with limitations (no effects, no handlers) |
-| Hydration (client) | Nothing to do | Fully executed, handlers attached |
-| Soft nav | Fully executed (if segment changed) | NOT executed on server — rendered on client from RSC payload |
+|                     | Server Component                    | Client Component                                             |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| RSC render (Pass 1) | Fully executed                      | NOT executed — recorded as reference                         |
+| SSR render (Pass 2) | Already resolved to output          | Executed with limitations (no effects, no handlers)          |
+| Hydration (client)  | Nothing to do                       | Fully executed, handlers attached                            |
+| Soft nav            | Fully executed (if segment changed) | NOT executed on server — rendered on client from RSC payload |
 
 ## Streaming data from Server to Client with `use()`
 
@@ -751,23 +778,23 @@ No SSR. No HTML. No hydration. That's why soft nav is faster.
 ```tsx
 // Server Component — does NOT await
 export default function Page() {
-  const postPromise = getPost()
+  const postPromise = getPost();
   return (
     <Suspense fallback={<p>Loading...</p>}>
       <PostView postPromise={postPromise} />
     </Suspense>
-  )
+  );
 }
 ```
 
 ```tsx
 // Client Component — uses use() to read the promise
-'use client'
-import { use } from 'react'
+"use client";
+import { use } from "react";
 
 export default function PostView({ postPromise }) {
-  const post = use(postPromise)  // suspends until resolved
-  return <p>{post.title}</p>
+  const post = use(postPromise); // suspends until resolved
+  return <p>{post.title}</p>;
 }
 ```
 
@@ -780,10 +807,7 @@ You can't send a Promise over HTTP. React's Flight renderer (the RSC serializer)
 3. SSR pass hits the Suspense boundary, `use()` throws (value not ready), fallback HTML is rendered instead.
 4. Browser receives HTML with fallback — user sees "Loading..." instantly.
 
-When the Promise resolves on the server:
-5. The `.then()` fires, serializes the value, writes it to the still-open stream as a late chunk (`2:{"title":"Hello World"}`).
-6. A `$RC` inline script (tiny vanilla JS, not React) finds the `<!--$?-->` marker in the DOM and swaps the fallback HTML for the real HTML — **instant visual update, no React needed**.
-7. React reconciliation then confirms its virtual tree matches the updated DOM.
+When the Promise resolves on the server: 5. The `.then()` fires, serializes the value, writes it to the still-open stream as a late chunk (`2:{"title":"Hello World"}`). 6. A `$RC` inline script (tiny vanilla JS, not React) finds the `<!--$?-->` marker in the DOM and swaps the fallback HTML for the real HTML — **instant visual update, no React needed**. 7. React reconciliation then confirms its virtual tree matches the updated DOM.
 
 ### Why two swap mechanisms ($RC + React reconciliation)?
 
@@ -816,15 +840,15 @@ Solution: the `children` prop pattern. The provider wraps `{children}` but doesn
 
 ```tsx
 // app/theme-provider.tsx (Client Component)
-'use client'
+"use client";
 export default function ThemeProvider({ children }) {
-  return <ThemeContext value="dark">{children}</ThemeContext>
+  return <ThemeContext value="dark">{children}</ThemeContext>;
 }
 
 // app/layout.tsx (Server Component)
-import ThemeProvider from './theme-provider'
+import ThemeProvider from "./theme-provider";
 export default function Layout({ children }) {
-  return <ThemeProvider>{children}</ThemeProvider>
+  return <ThemeProvider>{children}</ThemeProvider>;
   // children here are server components — they stay server
 }
 ```
@@ -872,13 +896,13 @@ Cache is scoped per request — next request starts fresh.
   ```ts
   // What you write (server):
   export async function greet(name: string) {
-    'use server'
-    return { message: `Hello, ${name}!`, pid: process.pid }
+    "use server";
+    return { message: `Hello, ${name}!`, pid: process.pid };
   }
 
   // What the client bundle actually contains (simplified):
   export async function greet(name) {
-    return callServer("abc123", [name])
+    return callServer("abc123", [name]);
   }
   ```
 
@@ -889,6 +913,7 @@ Cache is scoped per request — next request starts fresh.
   - Server → client: server function return values
 
 - **What happens when you call a server function:**
+
   ```
   1. greet("Obada") called on the client
   2. stub serializes args using Flight → sends POST to current page URL
@@ -899,19 +924,22 @@ Cache is scoped per request — next request starts fresh.
   5. Next.js on the client decodes the Flight stream → resolves the Promise
   6. await greet("Obada") returns { message: "Hello, Obada!", pid: 1234 }
   ```
+
   The POST goes to the current page URL (e.g. `/lab/server-fn`). Next.js distinguishes it from a normal page request via the `Next-Action` header.
 
 - **Why RSC payload and not plain JSON for the response:**
   The response can contain more than just the return value. If the server function calls `revalidatePath`/`revalidateTag`, Next.js re-renders the affected routes on the server and includes fresh RSC payload for those routes in the same response. The client then reconciles that tree — diffs the new virtual tree against the current one, and commits the changes to the DOM (updating, mounting, or unmounting nodes as needed). All in one roundtrip.
 
 - **Simple case (no revalidation) — full sequence:**
+
   ```tsx
   // Client component
   async function handleClick() {
-    const response = await greet(name)  // POST fires, awaits Flight response
-    setResult(response)                 // normal React setState → re-render
+    const response = await greet(name); // POST fires, awaits Flight response
+    setResult(response); // normal React setState → re-render
   }
   ```
+
   No RSC reconciliation needed here. `await greet()` resolves with the return value, `setResult` triggers a normal React re-render. That's it.
 
 - **Where to define server functions:**
@@ -944,13 +972,13 @@ Cache is scoped per request — next request starts fresh.
   5. Sets `isPending = false` in the same commit
 
   ```tsx
-  const [isPending, startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition();
 
   function handleClick() {
     startTransition(async () => {
-      const data = await savePost()   // server call
-      setResult(data)                 // deferred until server responds
-    })
+      const data = await savePost(); // server call
+      setResult(data); // deferred until server responds
+    });
     // isPending is already true here — spinner shows instantly
   }
   ```
@@ -959,79 +987,94 @@ Cache is scoped per request — next request starts fresh.
 
 - **Form actions wrap `startTransition` automatically:**
   When you pass a server action to `<form action={...}>`, React internally does:
+
   ```ts
   startTransition(async () => {
-    await yourServerAction(formData)
-  })
+    await yourServerAction(formData);
+  });
   ```
+
   The `<form>` also provides the transition's pending state through React context — so child components can read it.
 
 - **`useFormStatus` — reads the form's pending state:**
   Must be used inside a child component of the `<form>`. Reads `isPending` from the nearest parent form's transition context.
+
   ```tsx
   // Must be its own component — hooks can't be called conditionally mid-render
   function SubmitButton() {
-    const { pending } = useFormStatus()
-    return <button disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>
+    const { pending } = useFormStatus();
+    return <button disabled={pending}>{pending ? "Saving..." : "Save"}</button>;
   }
 
   function MyForm() {
     return (
       <form action={createPost}>
         <input name="title" />
-        <SubmitButton />  {/* inside the form → can read its pending state */}
+        <SubmitButton /> {/* inside the form → can read its pending state */}
       </form>
-    )
+    );
   }
   ```
+
   `SubmitButton` cannot be inlined directly in `MyForm` — `useFormStatus` must be in a **child component** of the form, not the same component that renders the form.
 
 - **`useActionState` — pending + return value:**
   When you also need the server action's return value (e.g., validation errors), `useActionState` wraps everything:
+
   ```tsx
   // Server action: receives prevState as first arg, FormData as second
-  async function createPost(prevState: State, formData: FormData): Promise<State> {
-    'use server'
-    const title = formData.get('title')
-    if (!title) return { error: 'Title is required', created: null }
-    await db.createPost(title)
-    return { error: null, created: { title } }
+  async function createPost(
+    prevState: State,
+    formData: FormData,
+  ): Promise<State> {
+    "use server";
+    const title = formData.get("title");
+    if (!title) return { error: "Title is required", created: null };
+    await db.createPost(title);
+    return { error: null, created: { title } };
   }
 
   function PostForm() {
-    const [state, action, pending] = useActionState(createPost, { error: null, created: null })
+    const [state, action, pending] = useActionState(createPost, {
+      error: null,
+      created: null,
+    });
     //     ↑ last return value   ↑ wrapped action    ↑ isPending
 
     return (
       <form action={action}>
         <input name="title" />
         {state.error && <p>{state.error}</p>}
-        <button disabled={pending}>{pending ? 'Saving...' : 'Save'}</button>
+        <button disabled={pending}>{pending ? "Saving..." : "Save"}</button>
       </form>
-    )
+    );
   }
   ```
+
   `state` starts as `initialState`, then becomes the return value of the last server action call.
 
   Rough implementation — it's just `useState` + `useTransition` glued together:
+
   ```tsx
   function useActionState(action, initialState) {
-    const [state, setState] = useState(initialState)
-    const [isPending, startTransition] = useTransition()
+    const [state, setState] = useState(initialState);
+    const [isPending, startTransition] = useTransition();
 
     function wrappedAction(formData) {
       startTransition(async () => {
-        const newState = await action(state, formData)  // passes prevState + formData
-        setState(newState)                               // deferred — commits when transition ends
-      })
+        const newState = await action(state, formData); // passes prevState + formData
+        setState(newState); // deferred — commits when transition ends
+      });
     }
 
-    return [state, wrappedAction, isPending]
+    return [state, wrappedAction, isPending];
   }
   ```
+
   This is also why the server action receives `prevState` as its first arg — `useActionState` passes the current `state` to it on every call.
 
 - **Full sequence for a form submission:**
+
   ```
   user clicks Submit
     → React intercepts the native form submit event
@@ -1057,19 +1100,21 @@ Cache is scoped per request — next request starts fresh.
 - **Caching with `cacheComponents`:** same model as page components. Fully static handler (no dynamic APIs) → prerendered at build automatically. Touches dynamic APIs (`request.headers`, `cookies()`, `Math.random()`) → runs at request time. No config needed either way.
 
 - **`use cache` in a helper function = Data Cache caching, not prerendering.** For the case where the handler is dynamic (can't be prerendered) but has an expensive sub-operation you want cached across requests:
+
   ```ts
   export async function GET(request: Request) {
-    const ua = request.headers.get('user-agent')  // dynamic — always runs fresh
-    const products = await getProducts()           // Data Cache — skipped on repeat calls
-    return Response.json({ ua, products })
+    const ua = request.headers.get("user-agent"); // dynamic — always runs fresh
+    const products = await getProducts(); // Data Cache — skipped on repeat calls
+    return Response.json({ ua, products });
   }
 
   async function getProducts() {
-    'use cache'
-    cacheLife('hours')
-    return db.query('SELECT * FROM products')
+    "use cache";
+    cacheLife("hours");
+    return db.query("SELECT * FROM products");
   }
   ```
+
   First request → `getProducts()` runs, result stored. Second request → handler runs again (dynamic, always does), but `getProducts()` returns cached result — no DB call. This is the same second mode of `use cache` from the cache components notes: "runs at request time on first call, caches result keyed by inputs, reuses on future requests."
 
 - `use cache` can't go directly in the handler body — must be in a helper function. The handler is the route entry point Next.js controls; `use cache` needs to mark a self-contained function whose output is independently cacheable.

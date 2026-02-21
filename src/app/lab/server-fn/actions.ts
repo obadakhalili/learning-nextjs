@@ -16,7 +16,7 @@ export type CreatePostState = {
 
 export async function createPost(
   _prevState: CreatePostState,
-  formData: FormData
+  formData: FormData,
 ): Promise<CreatePostState> {
   // Fake delay so the pending state is clearly visible
   await new Promise((r) => setTimeout(r, 1000));

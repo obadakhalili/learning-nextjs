@@ -2,7 +2,9 @@ type InspectorPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export default async function InspectorDemoPage({ params }: InspectorPageProps) {
+export default async function InspectorDemoPage({
+  params,
+}: InspectorPageProps) {
   const { slug } = await params;
 
   return (
