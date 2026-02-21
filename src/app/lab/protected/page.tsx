@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
 import { use, useContext } from "react";
 import { UserContext } from "../_components/user-provider";
 
 export default function ProtectedPage() {
-  const userContext = useContext(UserContext)
-  const id = use(userContext)?.id
+  const userContext = useContext(UserContext);
+  const id = use(userContext)?.id;
 
   return (
     <div>
