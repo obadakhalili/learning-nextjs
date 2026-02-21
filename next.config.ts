@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // },
 
   // by default next prerenders static routes and ignores dynamic components at build time, but with this option enabled, it will try to prerender all components including dynamic ones by partially prerendering them (replacing dynamic holes with static fallback shells)
-  // cacheComponents: true
+  cacheComponents: true
 };
 
 export default nextConfig;
