@@ -649,11 +649,13 @@ such as:
   - Without flag: `ƒ` — entire page re-rendered on every request, heading included
   - With flag: `◐` — heading baked into static shell at build, only the `searchParams`-dependent part streams in at request time (behind the Suspense from `loading.tsx`)
 
-- Parts that need runtime data must be explicitly handled — wrapped in `<Suspense>` or `use cache` — or the build throws:
+- Parts that call dynamic APIs (`cookies()`, `headers()`, `searchParams`, etc.) must be wrapped in `<Suspense>` — no way around it. `use cache` does NOT substitute for `<Suspense>` here. Without it:
 
   ```
   Error: Uncached data was accessed outside of <Suspense>
   ```
+
+- `use cache` is only an alternative to `<Suspense>` when the component/function has **no dynamic API calls** — pure expensive work (DB query, computation) that takes plain values as inputs. That's enough to satisfy the build; no Suspense needed.
 
 - The "static shell" is everything Next.js can resolve at build time without knowing who the user is or what they're requesting. At request time, only the dynamic holes stream in.
 
