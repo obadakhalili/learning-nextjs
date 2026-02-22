@@ -347,6 +347,17 @@ such as:
     - nearest boundary `app/lab/error.tsx` renders
     - "Try again" calls `reset()`
 
+- What you cannot do in a Server Component:
+  - **Hooks** — no `useState`, `useEffect`, `useContext`, `useRef`, etc. Hooks are client-only.
+  - **Event handlers** — no `onClick`, `onChange`, etc. No browser events on the server.
+  - **Browser APIs** — no `window`, `document`, `localStorage`, `navigator`, etc.
+  - **Import and use a client component as if it were a server component** — but you CAN pass server components into client components via props (orchestrator pattern).
+  - **Unresolved Promises as JSX** — can't pass a raw Promise as a child without the `use()` pattern on the client side.
+  - What's actually fine (common misconceptions):
+    - `async/await` — server components can be async, that's the point.
+    - DB calls, file system access, secrets — fine, never reach the browser.
+    - Importing server-only packages — fine, never bundled for the client.
+
 - React Server Components (RSC)
   - RSC is a protocol defined by React, not a Next.js invention. Next.js implements it.
   - The main idea: components in the app tree live in two module graphs -- server and client.
