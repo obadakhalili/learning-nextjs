@@ -7,7 +7,6 @@ export default async function proxy(req: NextRequest) {
   const route = req.nextUrl.pathname;
   if (protectedRoutes.includes(route)) {
     const user = await getUser();
-    console.log("look here", user);
     if (!user) {
       return NextResponse.redirect(new URL("/lab/user", req.url));
     }
