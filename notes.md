@@ -131,7 +131,7 @@ such as:
   ```
 
 - Deduplicating fetch requests
-  - `fetch` calls are automatically deduplicated within a single render pass (same request lifetime) — same URL + same options → only one actual HTTP request, result shared across all callers. This is request memoization, and it behaves exactly like `React.cache` applied automatically to `fetch`.
+  - `fetch` calls are automatically deduplicated within a single render pass (same request lifetime) — same URL + same options → only one actual HTTP request, result shared across all callers. This is request memoization, and it behaves exactly like `React.cache` applied automatically to `fetch`. Only applies to `GET` and `HEAD` — `POST`/`DELETE`/etc. are never memoized.
   - For across-request deduplication, use the Data Cache: `{ cache: 'force-cache' }` stores the fetch response persistently. Future requests reuse the stored response without hitting the external API.
   - For ORM/DB calls (not `fetch`), request memoization doesn't apply automatically — wrap with `React.cache` manually for the same within-request deduplication effect.
 
