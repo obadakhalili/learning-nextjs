@@ -677,25 +677,7 @@ such as:
 
 - When runtime data (e.g. cookies) is needed across many client components, the promise-to-context pattern is more surgical than a coarse `<Suspense>` boundary. A `<Suspense>` wrapper hides an entire subtree behind a fallback. With the promise-to-context pattern, the layout passes the Promise (without awaiting) to a client context provider — layout and all static surroundings stay in the static shell, and only the individual client components that call `use(useContext(...))` suspend on their own as small isolated holes.
 
-- `revalidateTag` vs `updateTag`:
-  - `revalidateTag`: marks the cache entry as stale. Current request still gets old cached data. Next request triggers background revalidation (stale-while-revalidate). Use when slight staleness is acceptable.
-  - `updateTag`: expires the cache AND immediately re-computes within the same request. Response includes fresh data. Use when the update must be reflected right away.
-
-  ```ts
-  // eventual consistency — okay for blog posts
-  export async function createPost(post: FormData) {
-    "use server";
-    await db.insertPost(post);
-    revalidateTag("posts"); // next visitor may briefly see old list
-  }
-
-  // immediate consistency — required for cart
-  export async function addToCart(itemId: string) {
-    "use server";
-    await db.insertCartItem(itemId);
-    updateTag("cart"); // same response already reflects updated cart
-  }
-  ```
+- `revalidateTag` vs `updateTag`: see "Revalidation and refresh APIs" section below.
 
 - `connection()` from `next/server` is an explicit opt-out from prerendering. Without it, a component with `Math.random()` or `Date.now()` would run at build time — the value gets baked into the static shell and served to every user. `await connection()` signals "run this at request time", making everything after it dynamic. Requires a `<Suspense>` boundary above it for the same reason any dynamic component does.
 
@@ -1279,8 +1261,157 @@ Request memoization (deduplication within a render pass) only applies inside the
 - `export const dynamicParams = false` → unlisted paths 404 instead of being rendered on first visit.
 - Return empty array → nothing pre-rendered at build, everything rendered on first visit and cached.
 
+## Revalidation and refresh APIs
+
+All the ways to bust or refresh cache in Next.js, organized by what they actually do.
+
+### Overview
+
+| API | Called from | Clears | Staleness behavior |
+|---|---|---|---|
+| `revalidateTag('tag', 'max')` | Server Action, Route Handler | Data Cache + Full Route Cache (+ Router Cache if SA) | Stale-while-revalidate |
+| `updateTag('tag')` | Server Action only | Data Cache + Full Route Cache + Router Cache | Immediate purge |
+| `revalidatePath('/path')` | Server Action, Route Handler | Data Cache + Full Route Cache (+ Router Cache if SA) | Immediate purge |
+| `refresh()` from `next/cache` | Server Action only | Router Cache only | Re-fetches RSC, keeps Data Cache |
+| `router.refresh()` | Client component | Router Cache only | Re-fetches RSC, keeps Data Cache |
+
+---
+
+### `revalidateTag('tag', 'max')` — stale-while-revalidate by tag
+
+Marks cache entries with that tag as stale. Current and next request still get old data. In the background, Next.js refetches and stores fresh data. Visitors after that get fresh. Nobody waits.
+
+Use when: slight staleness is fine. Background content updates (CMS webhook fires when an article is published — readers can see the old version for a moment).
+
+```ts
+// webhook fires when a blog post is published
+export async function POST(req: Request) {
+  await revalidateTag('posts', 'max') // background refresh — no user waiting
+}
+
+// the fetch that gets targeted
+fetch('https://cms.io/posts', { next: { tags: ['posts'] } })
+```
+
+---
+
+### `updateTag('tag')` — immediate purge by tag (Server Actions only)
+
+Immediately expires the cache entry. The next request after this action is a guaranteed MISS — it fetches fresh and stores it. The user who triggered the action gets fresh data on their next navigation (read-your-own-writes).
+
+**Correction from earlier notes:** `updateTag` does NOT re-fetch within the same request. It expires the entry. The re-fetch happens on the next request — which, after a `redirect()`, is immediately the user's next page load.
+
+Use when: the user just mutated something and must see the result of their own action immediately (add to cart, create a post, update profile).
+
+```ts
+export async function addToCart(itemId: string) {
+  'use server'
+  await db.insertCartItem(itemId)
+  updateTag('cart')       // expire now
+  redirect('/cart')       // next request (this page load) hits a MISS → fresh cart
+}
+
+// the DB query that gets targeted
+async function getCart() {
+  'use cache'
+  cacheTag('cart')        // cacheTag tags use cache blocks (not fetch)
+  return db.query.cart.findMany()
+}
+```
+
+---
+
+### `cacheTag` — tagging non-fetch cached data
+
+`revalidateTag` and `updateTag` originally only worked with `fetch` requests tagged via `next.tags`. For DB queries and other computations cached with `use cache`, use `cacheTag` inside the block to make them targetable.
+
+```ts
+async function getProducts() {
+  'use cache'
+  cacheTag('products')   // now revalidateTag/updateTag can target this
+  return db.query('SELECT * FROM products')
+}
+
+// fetch equivalent (no cacheTag needed — use next.tags directly)
+fetch('https://...', { next: { tags: ['products'] } })
+```
+
+---
+
+### `revalidatePath('/path')` — immediate purge by path
+
+Purges Data Cache + Full Route Cache for everything under that path. If called from a Server Action, also clears Router Cache. If called from a Route Handler, Router Cache is NOT cleared (Route Handlers aren't tied to a specific route).
+
+Use when: a mutation affects an entire section and you can't (or don't want to) tag individual cache entries. Heavier than `revalidateTag` — purges everything under the path.
+
+```ts
+// admin deletes a user → purge the entire /users section
+export async function deleteUser(id: string) {
+  'use server'
+  await db.deleteUser(id)
+  revalidatePath('/users')  // clears all cached pages under /users
+}
+
+// webhook from payment provider → revalidate a specific order page
+export async function POST(req: Request) {
+  const { orderId } = await req.json()
+  revalidatePath(`/orders/${orderId}`)
+}
+```
+
+---
+
+### `refresh()` from `next/cache` — soft Router Cache refresh (Server Action only)
+
+Clears the Router Cache for the current route and tells the client to re-fetch the RSC payload. Does NOT touch Data Cache or Full Route Cache — if data is still cached there, the server re-renders with that cached data.
+
+Use when: something changed that affects the current page's UI but isn't in a cache you want to fully bust (e.g. a flag flipped in server memory, or you just want to force a re-render without invalidating data).
+
+```ts
+export async function toggleFeatureFlag() {
+  'use server'
+  featureFlags.toggle('new-ui')
+  refresh()  // current page re-renders, no Data Cache purge
+}
+```
+
+---
+
+### `router.refresh()` — same as above but from client
+
+Client-side equivalent of `refresh()`. Clears Router Cache and re-fetches RSC for the current route. Data Cache untouched.
+
+Use when: client-side trigger (button click) needs to force a page re-render without a full page reload and without busting cached data.
+
+```tsx
+'use client'
+export function RefreshButton() {
+  const router = useRouter()
+  return <button onClick={() => router.refresh()}>Refresh</button>
+}
+```
+
+---
+
+### Time-based revalidation — `next.revalidate`
+
+Not a manual call — baked into the fetch. Cache entry is valid for N seconds. After expiry, stale-while-revalidate: first request after expiry gets old data but triggers a background refresh. Good for data that changes on a schedule.
+
+```ts
+// revalidate at most every hour — no manual trigger needed
+fetch('https://...', { next: { revalidate: 3600 } })
+```
+
+---
+
+### When to use which — decision guide
+
+- User mutated something, must see their own change immediately → `updateTag`
+- Background content changed (CMS publish, webhook) → `revalidateTag(..., 'max')`
+- Entire section affected, tagging impractical → `revalidatePath`
+- Data changes on a schedule, staleness is acceptable → `next.revalidate`
+- Force a page re-render without busting data cache → `refresh()` / `router.refresh()`
+
 - TODO
-  - https://nextjs.org/docs/app/getting-started/updating-data#refreshing ... from refetching and downward
-  - https://nextjs.org/docs/app/getting-started/caching-and-revalidating .. whole thing
   - question: solve a bug related to hydration
   - the loading thing in /account & /billing
