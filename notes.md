@@ -659,11 +659,7 @@ such as:
 
 - The "static shell" is everything Next.js can resolve at build time without knowing who the user is or what they're requesting. At request time, only the dynamic holes stream in.
 
-- Client components are also subject to this. "Client component" doesn't mean "only runs in browser". Client components still run on the server during the SSR pass to produce HTML. With `cacheComponents`, that SSR pass happens at build time. So if a client component calls `usePathname()` or any runtime API, it fails at build time too — unless it's behind a `<Suspense>`.
-
-- The difference `cacheComponents` makes for runtime APIs in client components (like `usePathname()`):
-  - Without `cacheComponents`: `usePathname()` runs at build time, returns whatever value is available (or null), no error. The incorrect value gets patched during hydration on the client. Next.js tolerates this.
-  - With `cacheComponents`: `usePathname()` is actively tracked as runtime data access. Accessing it outside `<Suspense>` is a build error — the static shell must be correct upfront, not fixed later by hydration.
+- Client components are subject to `cacheComponents` too. The assumption "it's a client component so runtime APIs like `usePathname()` are fine" is wrong — client components also SSR on the server to produce the initial HTML. Without `cacheComponents`, dynamic routes SSR at request time, so `usePathname()` has the real URL available. With `cacheComponents`, SSR happens at build time — no URL exists, `usePathname()` has nothing to return and the build fails. Fix: wrap the client component in `<Suspense>` so it becomes a dynamic hole that SSRs at request time instead. Example in project: `LabNav` uses `usePathname()` and is wrapped in `<Suspense>` in `layout.tsx`.
 
 - `loading.tsx` at a segment level wraps `{children}` in a Suspense boundary — it covers the page content passed into the layout, NOT components rendered directly inside the layout itself (like a `<LabNav />` in the layout JSX).
 
