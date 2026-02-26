@@ -24,41 +24,6 @@
 | Q13 | page.tsx vs default.tsx in slots | 1/5 | graded |
 | Q14 | Route Handler / Server Action misuses | 3/5 | graded |
 | Q15 | use cache two modes | 2/5 | graded |
-| Q16 | Preloading pattern (code) | —/5 | pending |
-| Q17 | useActionState + useFormStatus (code) | —/5 | pending |
-| Q18 | Dynamic handler with cached sub-query (code) | —/5 | pending |
-| Q19 | Parallel slot setup (code) | —/5 | pending |
-| Q20 | usePathname + cacheComponents fix (code) | —/5 | pending |
-| Q21 | DAL + DTO pattern (code) | —/5 | pending |
-| Q22 | Promise-to-context pattern (code) | —/5 | pending |
-| Q23 | Intercepted route modal (code) | —/5 | pending |
-| Q24 | Mixed static/dynamic tree (code) | —/5 | pending |
-| Q25 | addToCart cache walkthrough (code) | —/5 | pending |
-| Q26 | RSC vs SSR | —/5 | pending |
-| Q27 | Parallel routes | —/5 | pending |
-| Q28 | ISR + stale-while-revalidate | —/5 | pending |
-| Q29 | Middleware / Proxy | —/5 | pending |
-| Q30 | generateStaticParams + dynamicParams | —/5 | pending |
-| Q31 | Streaming | —/5 | pending |
-| Q32 | Error boundaries | —/5 | pending |
-| Q33 | Route Handlers vs Server Actions | —/5 | pending |
-| Q34 | Intercepting routes | —/5 | pending |
-| Q35 | next/image | —/5 | pending |
-| Q36 | ISR vs PPR trade-off | —/5 | pending |
-| Q37 | Cache cascade walkthrough | —/5 | pending |
-| Q38 | Auth-in-layout gotcha | —/5 | pending |
-| Q39 | Loading state debugging | —/5 | pending |
-| Q40 | Route 404 vs resource 404 | —/5 | pending |
-| Q41 | React.cache scope isolation | —/5 | pending |
-| Q42 | Prefetching deep dive | —/5 | pending |
-| Q43 | Flight protocol | —/5 | pending |
-| Q44 | useActionState internals | —/5 | pending |
-| Q45 | Architecture design | —/5 | pending |
-| Q46 | use() vs await | —/5 | pending |
-| Q47 | Hydration mismatches | —/5 | pending |
-| Q48 | pushState vs router.push | —/5 | pending |
-| Q49 | Server component inside client component | —/5 | pending |
-| Q50 | Static shell mental model | —/5 | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
 **Part 2 (Practice):** — / ? — pending
