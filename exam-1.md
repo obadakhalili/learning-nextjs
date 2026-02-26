@@ -17,7 +17,11 @@ Describe the two server-side rendering passes that happen on initial page load. 
 
 **Your Answer:**
 ```
+on initial page load, nextjs renders the component tree corresponding to the given route in the server. in the first pass, the output is the rsc payload. it is a special json structure that contains the elements which make up the route page, with some exceptions. for example, client components in the components tree are not resolved, instead there are references to them in the rsc payload. also, suspended async components are not resolved and are instead replaced with the closed suspense boundrey fallback component. finally, props passed around server components are serialized using the flight protocol. it is similar to json but it handles serializing other data types such as maps, sets, jsx, and famously promises.
 
+the second pass takes the rsc payload as input, and compiles it as html. importantly here, references to client components are resolved and included in the final html output.
+
+the server serves the html result for immediate visual display + SEO, and the RSC payload to be used by the react code on the client to reconlice the payload with the app tree and hydrate.
 ```
 
 **Grade & Notes:**
@@ -33,7 +37,10 @@ What is the difference between `layout.tsx` and `template.tsx`? Give a concrete 
 
 **Your Answer:**
 ```
+- `layout.tsx`: wraps the entire route components inside it. it is responsible for rendering the main page component and other slots that exist in the same route segment
+`- `template.tsx`: wraps each parallel branch inside the route components tree (main page component + slots components) and has a key assigned to current path, so it rerenders on changes to path changes inside the segment branch, unlike `layout.tsx` which only renders once
 
+example: if there are multiple parallel branches to render due to use of slots, then template will wrap each, but layout will wrap the entire route contents
 ```
 
 **Grade & Notes:**
@@ -49,7 +56,8 @@ Why is `params` typed as a `Promise` in Next.js App Router? What concept does th
 
 **Your Answer:**
 ```
-
+technically, params shouldn't need to be awaited because accessing them is not an async operation. in fact, in previoues nextjs verions params weren't wrapped in promises.
+however, params are wrapped in a promise to conform to a certain pattern. which is that access to data only available at request time should be inside async components that are suspended and wrapped inside suspense boundary.
 ```
 
 **Grade & Notes:**
@@ -65,7 +73,7 @@ Why is `params` typed as a `Promise` in Next.js App Router? What concept does th
 
 **Your Answer:**
 ```
-
+"use client" marks a seperation in the app tree between server components and client components. client components actually run on the server on initial page load to produce the html, for that reason the initial render shoudn't touch browser specific apis or anything that breaks the component on the server.
 ```
 
 **Grade & Notes:**
@@ -81,7 +89,24 @@ Name and describe all four cache layers in Next.js. For each, state: (a) where i
 
 **Your Answer:**
 ```
-
+- full route cache
+  - populated at build time and its cache entries are the html + rsc payload of static parts of the app
+  - it can be populated at runtime for routes that dont access request data that weren't prerendered at build time and stored inside the full route cache. for example, a dynamic route that some of its slugs weren't returned in generateStaticParams and was only rendered at request time. next request will be served from the full route cache
+  - by default this cache lives in the server file system, and some deployment platform moves this part of the build output to a cdn layer
+  - it persists across requests and deployments, and cache entries are purged when revalidated it using `revalidatePath`
+- data cache
+  - stores `fetch` responses (if the user opts into it) and other cached functions output inside a data store
+  - it lives in the server file system by default and some deployment platforms like vercel moves the cache into a special KV store
+  - persists across requests and deployments
+  - cache entries can be clearned using revalidation methods such as `revalidateTag` & `updateTag`
+- react memoization
+  - is actually implemented by React and used in Next
+  - it memiozes the output of decorated functions and stored inside the server memory
+  - it persists within the one request
+  - the point of this cache is for server components that need access to the same data to be able to call the same functions multiple times in different places without having to worry about passing data around and prop drill the data
+- router cache
+  - stores the rsc payload of fetched routes during the user session when doing in-app navigation
+  - the cache persists during user session starting from initial page load until the next hard reload
 ```
 
 **Grade & Notes:**
@@ -97,7 +122,9 @@ Explain what `{ cache: 'no-store' }` on a `fetch` call does. Be specific — it 
 
 **Your Answer:**
 ```
-
+- `no-store` option opts out of the data cache and nextjs doesnt cache the responses of fetch calls that use this function
+- any route's components that call `fetch` functions with `no-store` option set designates this route as dynamic and is only rendered at request time. doesn't get stored at full route cache
+- the idea of the second behaviour is that there is no point of never caching a fetch call if the page that uses the data to render html is cached
 ```
 
 **Grade & Notes:**
@@ -113,7 +140,9 @@ Explain the preloading data pattern using `React.cache`. What specific problem d
 
 **Your Answer:**
 ```
-
+- data preloading applies when a parent component waits to fetch some data in order to render, and the child component also waits to fetch some data, and both of these data fetches are not dependent.
+- in this case, the data needed by the second component can be prefetched in the parent component (without awaiting), and when the child component runs and try to fetch the same data it will be already resolved or will take less time to wait
+- using `React.cache` is an important part of this pattern due to request deduplication, because we need the second call to the child component data to not make a different request and instead fetch the cached response or wait for the response of the original request
 ```
 
 **Grade & Notes:**
@@ -129,7 +158,8 @@ Explain the difference between `revalidateTag` and `updateTag`. What does each d
 
 **Your Answer:**
 ```
-
+- `revalidateTag` uses a stale-while-revalidate strategy: it marks the cache entries mapped to the given tag as stale, doesn't purge them so next requests can still use the stale data in the store, and in the background when the fresh data is available its stored in cache
+- `updateTag` purges the cache immediately and next request have to wait until the fresh data is stored
 ```
 
 **Grade & Notes:**
@@ -145,7 +175,7 @@ What is `self.__next_f.push` and why does Next.js use this pattern? Why can't th
 
 **Your Answer:**
 ```
-
+`self._next_f.push` contains the rsc payload from the server injected as scripts in the html page. the idea is to make the rsc payload available as soon as the page loads so that when react loads it can access it Immediately
 ```
 
 **Grade & Notes:**
@@ -161,7 +191,8 @@ Describe how soft navigation (clicking a `<Link>`) differs from a hard navigatio
 
 **Your Answer:**
 ```
-
+- initial page load (or hard navigation): server does two passes, the first produces the rsc payload and the second uses the rsc payload to generate the html. both are served to the browser, the html for initial visual display and is useful for seo and the rsc is necessary for reconcilation and hydration by react on the client
+- soft (or within app) navigation: request to fetch the page is sent to the server, a header is sent containing the current next router state so the server knows what to avoid rerendering. and only the rsc is produced and served to the client and react uses it to reconcile the app tree and update the ui
 ```
 
 **Grade & Notes:**
@@ -177,7 +208,7 @@ Why is hiding a button or a page returning `null` NOT a security measure in Next
 
 **Your Answer:**
 ```
-
+- returning `NULL` in server components is not enough because data can still be fetched from routes, so authorization must be enfornced in the data access layer not just in components.
 ```
 
 **Grade & Notes:**
@@ -193,7 +224,7 @@ Explain the `cacheComponents` flag and how it changes Next.js's rendering model.
 
 **Your Answer:**
 ```
-
+by default, nextjs prerendering decision is per-route. static routes components are prerendered and stored in the full route cache, but dynamic routes that use slugs or search params are not touched. setting `cacheComponents` to true makes the decision per-component. so at build time, next will try to preprender the whole app tree, and will replace dynamic components with the fallback used in the surrounding suspense boundary
 ```
 
 **Grade & Notes:**
@@ -209,7 +240,9 @@ In the context of parallel routes, what is the difference between `page.tsx` and
 
 **Your Answer:**
 ```
+page.tsx is the main component for a given route, default.tsx is a fallback component that is rendered when the main component or any of the components of subroutes are not available.
 
+in the context of parallel routes, not much is different. default.tsx component will render under the same rules, except the "where" it renders is different based on is it the component for a canonical route or being intercepted by another route or used as a slot
 ```
 
 **Grade & Notes:**
@@ -225,7 +258,8 @@ There are two common misuses of Next.js primitives: (a) calling a Route Handler 
 
 **Your Answer:**
 ```
-
+- route handlers are not available during prerendering, so calling it from inside a server component will fail. functions must be used as the source of truth for data and accessed by route handlers and server components instead.
+- calls to server actions are scheduled making it ineffecient to use to fetch data and should only be used for mutations. data must be fetched from route handles or passed from server components as promises or resolved promieses instead.
 ```
 
 **Grade & Notes:**
@@ -241,7 +275,8 @@ There are two common misuses of Next.js primitives: (a) calling a Route Handler 
 
 **Your Answer:**
 ```
-
+- functions dependent on data only available at runtime or make io/network calls. these get cached at runtime on first request
+- functions that dont access data only available at runtime get cached at build time
 ```
 
 **Grade & Notes:**
