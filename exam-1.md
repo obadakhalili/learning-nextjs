@@ -5,6 +5,69 @@
 
 ---
 
+## Grading Summary
+
+| Q | Topic | Score | Status |
+|---|---|---|---|
+| Q1 | Two RSC rendering passes | 3/5 | graded |
+| Q2 | layout.tsx vs template.tsx | 2/5 | graded |
+| Q3 | Why params is a Promise | 3/5 | graded |
+| Q4 | 'use client' module boundary | 2/5 | graded |
+| Q5 | Four cache layers | 3/5 | graded |
+| Q6 | { cache: 'no-store' } dual effect | 4/5 | graded |
+| Q7 | Preloading pattern with React.cache | 3/5 | graded |
+| Q8 | revalidateTag vs updateTag | 4/5 | graded |
+| Q9 | self.__next_f.push | 2/5 | graded |
+| Q10 | Soft vs hard navigation | 3/5 | graded |
+| Q11 | Hiding UI is not security | 2/5 | graded |
+| Q12 | cacheComponents flag | 3/5 | graded |
+| Q13 | page.tsx vs default.tsx in slots | 1/5 | graded |
+| Q14 | Route Handler / Server Action misuses | 3/5 | graded |
+| Q15 | use cache two modes | 2/5 | graded |
+| Q16 | Preloading pattern (code) | —/5 | pending |
+| Q17 | useActionState + useFormStatus (code) | —/5 | pending |
+| Q18 | Dynamic handler with cached sub-query (code) | —/5 | pending |
+| Q19 | Parallel slot setup (code) | —/5 | pending |
+| Q20 | usePathname + cacheComponents fix (code) | —/5 | pending |
+| Q21 | DAL + DTO pattern (code) | —/5 | pending |
+| Q22 | Promise-to-context pattern (code) | —/5 | pending |
+| Q23 | Intercepted route modal (code) | —/5 | pending |
+| Q24 | Mixed static/dynamic tree (code) | —/5 | pending |
+| Q25 | addToCart cache walkthrough (code) | —/5 | pending |
+| Q26 | RSC vs SSR | —/5 | pending |
+| Q27 | Parallel routes | —/5 | pending |
+| Q28 | ISR + stale-while-revalidate | —/5 | pending |
+| Q29 | Middleware / Proxy | —/5 | pending |
+| Q30 | generateStaticParams + dynamicParams | —/5 | pending |
+| Q31 | Streaming | —/5 | pending |
+| Q32 | Error boundaries | —/5 | pending |
+| Q33 | Route Handlers vs Server Actions | —/5 | pending |
+| Q34 | Intercepting routes | —/5 | pending |
+| Q35 | next/image | —/5 | pending |
+| Q36 | ISR vs PPR trade-off | —/5 | pending |
+| Q37 | Cache cascade walkthrough | —/5 | pending |
+| Q38 | Auth-in-layout gotcha | —/5 | pending |
+| Q39 | Loading state debugging | —/5 | pending |
+| Q40 | Route 404 vs resource 404 | —/5 | pending |
+| Q41 | React.cache scope isolation | —/5 | pending |
+| Q42 | Prefetching deep dive | —/5 | pending |
+| Q43 | Flight protocol | —/5 | pending |
+| Q44 | useActionState internals | —/5 | pending |
+| Q45 | Architecture design | —/5 | pending |
+| Q46 | use() vs await | —/5 | pending |
+| Q47 | Hydration mismatches | —/5 | pending |
+| Q48 | pushState vs router.push | —/5 | pending |
+| Q49 | Server component inside client component | —/5 | pending |
+| Q50 | Static shell mental model | —/5 | pending |
+
+**Part 1 (Concept):** 40 / 75 — graded
+**Part 2 (Practice):** — / ? — pending
+**Part 3 (Community):** — / ? — pending
+**Part 4 (Open):** — / ? — pending
+**Total:** 40 / ? — in progress
+
+---
+
 ## Part 1 — Concept Questions (15)
 
 *These require solid understanding of how Next.js works under the hood.*
@@ -26,7 +89,14 @@ the server serves the html result for immediate visual display + SEO, and the RS
 
 **Grade & Notes:**
 ```
+3/5
 
+Good foundation — you correctly identified both passes, described the RSC payload structure, mentioned Flight, and explained the dual purpose of the two outputs.
+
+Missing:
+1. What happens to client components in the SSR pass (Pass 2): they execute WITH LIMITATIONS — useState returns the initial value, useEffect is skipped, event handlers produce no output. You said they're "resolved and included in the final HTML" which is correct but vague. The limitation is important.
+2. The relationship between the two outputs is the weakest part. HTML is consumed by the BROWSER'S BUILT-IN PARSER (renders before any JS loads). The RSC payload is consumed by REACT'S RECONCILER after its JS downloads. They serve different consumers at different points in time — not just the same info in two formats.
+3. Small precision: in the RSC pass, a suspended async component doesn't get "replaced with its fallback" — it's marked as PENDING in the payload. The SSR pass (Pass 2) is what renders the fallback as HTML. The distinction matters.
 ```
 
 ---
@@ -45,7 +115,13 @@ example: if there are multiple parallel branches to render due to use of slots, 
 
 **Grade & Notes:**
 ```
+2/5
 
+You understand that template remounts on path changes (the key mechanic) but two problems:
+
+1. "layout.tsx which only renders once" is wrong. Layout REUSES across child-route transitions — it doesn't remount — but it can still re-render and update. "Never re-renders" is incorrect.
+
+2. The question asked for a concrete scenario where the behavior VISIBLY CHANGES. Your example describes structure ("template wraps each branch") but not what the USER sees differently. A proper scenario: "A CSS enter animation attached to a mount lifecycle — with template.tsx, navigating /dashboard/a → /dashboard/b re-triggers the animation because the component remounts. With layout.tsx, the animation only plays on the very first visit." Or: "a counter state inside a template.tsx component — resets to 0 on every route change. The same counter in layout.tsx persists across child navigations."
 ```
 
 ---
@@ -62,7 +138,13 @@ however, params are wrapped in a promise to conform to a certain pattern. which 
 
 **Grade & Notes:**
 ```
+3/5
 
+Right direction — you correctly identified it's NOT about URL parsing performance and IS about a rendering signal. Good.
+
+The framing is slightly off though. You said: "access to request-time data should be inside async components that are suspended and wrapped inside suspense boundary." That conflates the signal with the mechanism. The Promise is a RENDERING SIGNAL that tells the renderer "this component consumes request-scoped data here." Awaiting it is what opts the component into dynamic rendering. A Suspense boundary isn't always required — it's required when you want the static shell to prerender and this component to become a dynamic hole. But the Promise itself doesn't mandate that. The signal is simpler: "I touched request data, I must run at request time."
+
+More precise framing from your notes: "Promise here is a rendering signal, not a URL parsing cost issue. It marks: request-scoped data is consumed here."
 ```
 
 ---
@@ -78,7 +160,15 @@ however, params are wrapped in a promise to conform to a certain pattern. which 
 
 **Grade & Notes:**
 ```
+2/5
 
+You covered one true thing (client components SSR on the server on initial load) but completely missed what the question was actually asking: the MODULE GRAPH boundary.
+
+The question specifically asked: "what are the implications for everything IMPORTED from that file?" — this wasn't answered.
+
+The critical thing `'use client'` does: it defines a module graph boundary. Everything imported from a `'use client'` file joins the client module graph. If you import a server component inside a `'use client'` file, it stops being a server component — it becomes a client component, its code ships to the browser. The ONLY safe way to render a server component inside a client component is via props (passing it from a server orchestrator), not via import.
+
+"marks a separation in the app tree" is imprecise. It's a MODULE graph boundary, not just an app tree marker. The module graph is static (determined at build time from imports), while the app tree is runtime.
 ```
 
 ---
@@ -111,7 +201,17 @@ Name and describe all four cache layers in Next.js. For each, state: (a) where i
 
 **Grade & Notes:**
 ```
+3/5
 
+Good breadth — all four layers are present and mostly accurate. Issues per layer:
+
+Full Route Cache: "purged when revalidated using revalidatePath" — incomplete. revalidateTag also cascades to it (via tag dependency tracking). You should know BOTH paths.
+
+Request Memoization: You didn't explain HOW it's activated — automatic for `fetch` (deduplication built in), manual `React.cache` wrapper for DB/ORM calls. This is important because without knowing this you'd forget to wrap DB functions.
+
+Router Cache: Two significant gaps — (a) stale times: in Next.js 15, static routes have 5min stale time, dynamic routes have 0s (every forward nav re-fetches). (b) Back/forward navigation ALWAYS restores from cache regardless of staleness — this is different from forward navigation. Also missing: cookie mutations in a Server Action automatically clear the Router Cache.
+
+Order note: the canonical order for these layers is Request Memoization → Data Cache → Full Route Cache → Router Cache (innermost to outermost, closest to data to closest to user). Not wrong to list them differently, but worth knowing.
 ```
 
 ---
@@ -129,7 +229,11 @@ Explain what `{ cache: 'no-store' }` on a `fetch` call does. Be specific — it 
 
 **Grade & Notes:**
 ```
+4/5
 
+Both effects are there and the reasoning behind the second one is correct. Solid answer.
+
+Minor precision: the reasoning could be stated more mechanically. How Next.js actually works: during a rendering pass, when it encounters a `no-store` fetch (or any dynamic API like `cookies()`, `headers()`, `searchParams`), it marks the route as dynamic at that point. This is detected during the rendering pass itself — it's not a pre-build analysis. The effect is the route is excluded from Full Route Cache entirely. `no-store` is just one of several dynamic signals — worth knowing the others.
 ```
 
 ---
@@ -147,7 +251,15 @@ Explain the preloading data pattern using `React.cache`. What specific problem d
 
 **Grade & Notes:**
 ```
+3/5
 
+Core mechanism understood — fire-and-forget to get the fetch running, React.cache to deduplicate so the child's call returns the same in-flight Promise. Good.
+
+Two gaps:
+
+1. The value proposition should be stated in concrete terms: WITHOUT preloading, execution is sequential: total time = checkAvailability time + getProduct time. WITH preloading, they run in parallel: total time = max(checkAvailability, getProduct). This X+Y → max(X,Y) framing is the key reason the pattern exists.
+
+2. "When does the pattern NOT apply" — you said "both data fetches are not dependent" but didn't give the explicit constraint: if the blocking work DEPENDS ON the result of the data you want to preload, you cannot preload it. Example: if you need the product ID from an API call to then fetch product details, you can't preload the product details — you don't have the ID yet. The pattern only works when the two operations are genuinely independent of each other's results.
 ```
 
 ---
@@ -164,7 +276,15 @@ Explain the difference between `revalidateTag` and `updateTag`. What does each d
 
 **Grade & Notes:**
 ```
+4/5
 
+The core difference is correctly captured — stale-while-revalidate vs immediate purge. Good.
+
+Two minor points:
+
+1. `updateTag` is Server Action ONLY. Route Handlers cannot call it. This is a meaningful restriction worth knowing (if you need immediate purge from a Route Handler you have to use revalidatePath instead).
+
+2. "next request have to wait until the fresh data is stored" is slightly imprecise. It's a cache MISS — the next request fetches fresh data as part of serving that request. The data isn't pre-fetched after the purge — it's fetched on demand when the next request comes in and finds an empty cache. The user who triggered the action gets fresh data because they're that next request (usually after a redirect).
 ```
 
 ---
@@ -180,7 +300,15 @@ What is `self.__next_f.push` and why does Next.js use this pattern? Why can't th
 
 **Grade & Notes:**
 ```
+2/5
 
+You described WHAT it does (stores payload for React to read later) but didn't answer WHY this specific pattern — array with push calls instead of a single JSON object. The question directly asks this.
+
+Two reasons for the push-to-array pattern:
+
+1. STREAMING. The RSC payload doesn't arrive all at once. As Suspense boundaries resolve on the server, new chunks stream in as separate script tags — each one calls `.push()` to append to the array. A single JSON object can't be incrementally appended. The array accumulates chunks as they stream in, so React gets a complete picture once it reads the array.
+
+2. REACT HASN'T LOADED YET when the browser parses the inline scripts. The push calls execute immediately during HTML parsing and just store data. Later, when React's JS bundle finishes downloading and runs, it reads from the array. The array acts as a mailbox — data is deposited during parsing, collected when React is ready. If it were `window.__payload = {...}`, React would need to know the variable name AND the full payload would need to be available all at once.
 ```
 
 ---
@@ -197,7 +325,17 @@ Describe how soft navigation (clicking a `<Link>`) differs from a hard navigatio
 
 **Grade & Notes:**
 ```
+3/5
 
+(a) and (b) are correct — server does RSC-only pass, client receives only RSC payload. (d) is mentioned (Router State Tree header). Good.
+
+Missing (c) and (d) fully:
+
+(c) CLIENT COMPONENT STATE — you didn't address this at all. State is preserved because React diffs by tree position. If a component occupies the same position in the old and new virtual trees, React keeps its state. The server knows nothing about client state — it just sends RSC payload. React on the client is responsible for deciding what to keep.
+
+(d) LAYOUTS specifically: the reason shared layouts don't unmount is that React's diff sees them in the same position in both trees and keeps them mounted. The Router State Tree header tells the server which layouts are already rendered so it can skip them in the RSC payload, making the response smaller — but it's React's diffing (not the header) that actually keeps layouts mounted on the client.
+
+Also: client components during soft nav are NOT executed on the server at all — no SSR pass. They render directly on the client from the RSC payload references. Worth stating explicitly.
 ```
 
 ---
@@ -213,7 +351,19 @@ Why is hiding a button or a page returning `null` NOT a security measure in Next
 
 **Grade & Notes:**
 ```
+2/5
 
+Correct direction, but too thin. "Data can still be fetched from routes" is vague. The answer needs to explain WHY hiding UI fails — the mechanism.
+
+The actual reason: Server Actions and Route Handlers are HTTP endpoints callable directly, independent of any UI. A non-admin can POST directly to the page URL with the Next-Action header and call the action even if the button doesn't render:
+
+  curl -X POST https://myapp.com/admin -H "Next-Action: abc123" -d '["user-id"]'
+
+The action runs. The button not rendering is irrelevant.
+
+Second missing point: putting an auth check in a LAYOUT is also insufficient — layouts only re-render on hard navigation. On soft navigation (Link clicks), the layout stays mounted and the auth check never fires again. If a session expires mid-session, the user can keep navigating via Link clicks and bypass the check.
+
+Correct answer: verifySession() called inside EVERY data-fetching function and Server Action, unconditionally. Not in layouts (rendering concern), not in UI conditionals — in the data access functions themselves, which always run fresh per-request regardless of navigation type.
 ```
 
 ---
@@ -224,12 +374,24 @@ Explain the `cacheComponents` flag and how it changes Next.js's rendering model.
 
 **Your Answer:**
 ```
-by default, nextjs prerendering decision is per-route. static routes components are prerendered and stored in the full route cache, but dynamic routes that use slugs or search params are not touched. setting `cacheComponents` to true makes the decision per-component. so at build time, next will try to preprender the whole app tree, and will replace dynamic components with the fallback used in the surrounding suspense boundary
+by default, nextjs prerendering decision is per-route. static routes components are prerendering decision is per-route. static routes components are prerendered and stored in the full route cache, but dynamic routes that use slugs or search params are not touched. setting `cacheComponents` to true makes the decision per-component. so at build time, next will try to preprender the whole app tree, and will replace dynamic components with the fallback used in the surrounding suspense boundary
 ```
 
 **Grade & Notes:**
 ```
+3/5
 
+The fundamental shift (route-level → component-level) is correct and clearly stated. Good.
+
+Missing:
+
+1. The NAME for what it enables: Partial Prerendering (PPR). The build output changes from ƒ (dynamic) to ◐ (partial prerender). Worth naming it.
+
+2. Build-time enforcement: if a component calls dynamic APIs (cookies(), headers(), searchParams, etc.) WITHOUT a surrounding Suspense boundary, the build THROWS. It's not optional — dynamic parts must be explicitly wrapped. This is a hard contract.
+
+3. `cacheComponents` replaces the old route segment configs (export const dynamic = ..., revalidate, fetchCache). Those existed because decisions had to be made at the route level since there was no component-level granularity. With cacheComponents, they become redundant.
+
+4. The "static shell" concept: everything Next.js can resolve at build time without knowing who the user is or what they're requesting. That's what gets baked into the prerender. Only dynamic holes (behind Suspense, awaiting request data) are computed at request time.
 ```
 
 ---
@@ -247,7 +409,19 @@ in the context of parallel routes, not much is different. default.tsx component 
 
 **Grade & Notes:**
 ```
+1/5
 
+This answer doesn't address what the question asked. The question is specifically about page.tsx vs default.tsx INSIDE A SLOT — a very specific parallel routes concept.
+
+Inside a slot (e.g. @preview):
+- @preview/page.tsx — rendered when the slot HAS a matching route for the current URL (e.g. you're directly at /editor and the slot has a page for that level)
+- @preview/default.tsx — the FALLBACK rendered when NO matching slot branch exists for the current URL. For example, navigating to /editor/settings where @preview has no /editor/settings branch — default.tsx shows instead of a crash.
+
+These are NOT interchangeable. Renaming default.tsx to page.tsx means:
+- You GAIN: the slot renders page.tsx when you're at the root URL (/editor)
+- You LOSE: the unmatched fallback. When navigating to a sub-route with no slot match, Next.js has nothing to render for that slot and will throw a 404 or render an error — there's no fallback anymore.
+
+The general meaning of default.tsx (fallback when page isn't available) is related but the slot-specific mechanic (unmatched URL fallback) is what the question was testing.
 ```
 
 ---
@@ -264,7 +438,13 @@ There are two common misuses of Next.js primitives: (a) calling a Route Handler 
 
 **Grade & Notes:**
 ```
+3/5
 
+Direction is correct for both. But each is missing something:
+
+(a) Route Handler from Server Component — you only gave ONE reason (fails during prerendering / build time). The second reason is equally important: even at RUNTIME, it's an unnecessary HTTP round trip to your own server and back. You make a network request to yourself, adding latency for no reason, when you could just call the function directly. Both reasons together make this a clear antipattern.
+
+(b) Server Actions for data fetching — "scheduled" is the right word. The fix you gave is slightly off though: "fetched from route handlers or passed from server components as promises" — the actual correct fix is simpler: extract the shared logic into a PLAIN FUNCTION and call it directly from the Server Component. No HTTP, no Route Handler intermediary. The function is just TypeScript. Route Handlers are for external consumers; Server Components call functions directly.
 ```
 
 ---
@@ -281,7 +461,15 @@ There are two common misuses of Next.js primitives: (a) calling a Route Handler 
 
 **Grade & Notes:**
 ```
+2/5
 
+You identified the two modes (build-time vs runtime) but the question asked HOW CACHING WORKS DIFFERENTLY between them — this wasn't answered.
+
+Mode 1 (no runtime deps): runs at build time, result baked into the static shell, revalidated on schedule via cacheLife. Every request gets the same precomputed result. No cache key variability — there's one entry.
+
+Mode 2 (receives runtime values as props, inside Suspense): runs at REQUEST time on the first call with a given set of inputs. Result is cached KEYED BY THOSE INPUTS. Future requests with the same inputs skip the expensive work and get the cached result. Different inputs = different cache entry. This is similar to React.cache but persisted ACROSS requests (not scoped to one request). This is the important distinction — React.cache resets each request, use cache mode 2 persists across requests.
+
+Also missing: the constraint for both modes — runtime APIs (cookies(), headers(), etc.) cannot be called DIRECTLY inside a use cache function. You must read those values outside in a non-cached component and pass them as plain values (props/args). Those values then become part of the cache key. If you call cookies() inside use cache, it throws.
 ```
 
 ---
