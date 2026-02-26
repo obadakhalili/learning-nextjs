@@ -1212,185 +1212,243 @@ Cache is scoped per request — next request starts fresh.
   const user    = await getAdminUserDTO(id)
   ```
 
-## Caching in Next.js — full picture
+## Caching in Next.js
 
-You already know the four cache layers and most of their behavior. This section fills in the gaps from the full caching guide.
+### The four layers — physical reality
 
-### The four layers — quick reference
+| Layer | Lives in | Survives |
+|---|---|---|
+| Request Memoization | Server process memory | Single request only |
+| Data Cache | Server filesystem / Vercel KV | Across requests + deployments |
+| Full Route Cache | Server filesystem / CDN edge | Across requests + deployments |
+| Router Cache | Browser memory | Current tab session |
 
-| Layer | Where | Scope | Duration |
-|---|---|---|---|
-| Request Memoization | Server | Same render pass | Cleared after render |
-| Data Cache | Server | Across requests + deployments | Persistent (revalidatable) |
-| Full Route Cache | Server | Across requests + deployments | Persistent (revalidatable) |
-| Router Cache | Client (memory) | User session | Session or time-based |
-
-### How the layers interact (important)
-
-- **Data Cache → Full Route Cache: one-way cascade.** Revalidating or opting out of Data Cache invalidates Full Route Cache too (render output depends on data). The reverse is NOT true — opting out of Full Route Cache (dynamic rendering) does NOT affect Data Cache. Practical: a dynamic route can still cache expensive sub-fetches in Data Cache; only the route shell re-renders on every request.
-- **Data Cache → Router Cache: only via Server Actions.** `revalidateTag`/`revalidatePath` in a Server Action invalidates both. Same calls from a Route Handler invalidate Data Cache + Full Route Cache, but NOT Router Cache immediately — Router Cache only clears on hard refresh or after the automatic invalidation period. Route Handlers aren't tied to a specific route, so Next.js can't know which Router Cache entries to purge.
-
-### Time-based vs on-demand revalidation (Data Cache)
-
-Two ways to revalidate Data Cache. Key behavioral difference:
-
-- **Time-based** (`next.revalidate: 3600`): stale-while-revalidate. After the window expires, the NEXT request still gets stale data — but it triggers a background revalidation. Fresh data is stored. The request after that gets fresh. Nobody ever waits.
-- **On-demand** (`revalidateTag('posts')` / `revalidatePath('/')`): immediate purge. Cache entry is deleted right now. The next request is a MISS — fetches fresh and stores it. This is a true cache invalidation (what we discussed before as "invalidation" vs "revalidation").
-
-```ts
-// time-based — baked into the fetch
-fetch('https://...', { next: { revalidate: 3600 } }) // stale-while-revalidate, hourly
-
-// on-demand — called from Server Action or Route Handler
-revalidateTag('posts')   // purge by tag
-revalidatePath('/blog')  // purge by path (also re-renders the route)
-```
-
-### `revalidatePath` vs `router.refresh`
-
-Easy to confuse:
-- `revalidatePath('/path')` — server-side. Purges Data Cache + Full Route Cache for that path. If called from a Server Action, also purges Router Cache.
-- `router.refresh()` — client-side. Only clears Router Cache and re-fetches the current route's RSC payload from the server. Does NOT touch Data Cache or Full Route Cache. The server re-renders with whatever is in the Data Cache. Good for "refresh the page without a full reload."
-
-### Router Cache — details
-
-Already noted: stale time = 0 for dynamic pages in Next.js 15. More:
-- **Session-scoped**: entire cache is cleared on page refresh.
-- **What's cached differently**: layouts and `loading.tsx` fallbacks are cached for 5 min (static routes) or a shorter window (dynamic). Page segments are NOT cached by default in Next.js 15 (stale time = 0) — back/forward still restores from cache though.
-- **Cookie mutations invalidate it**: `cookies.set` / `cookies.delete` in a Server Action also clears Router Cache. Reason: if you log in or out, cached RSC payloads (which may have been rendered for the old auth state) must not be served.
-
-### `fetch` is not memoized in Route Handlers
-
-Request memoization (deduplication within a render pass) only applies inside the React component tree — Layouts, Pages, Server Components, `generateMetadata`, `generateStaticParams`. Route Handlers are NOT part of the component tree, so `fetch` calls there are not deduplicated automatically.
-
-### `generateStaticParams` — on-demand static generation
-
-- Paths returned by `generateStaticParams` → pre-rendered at build time, stored in Full Route Cache.
-- Paths NOT returned but visited at runtime → rendered on first request, then cached in Full Route Cache (on-demand static generation). Not just dynamic — cached after first hit.
-- `export const dynamicParams = false` → unlisted paths 404 instead of being rendered on first visit.
-- Return empty array → nothing pre-rendered at build, everything rendered on first visit and cached.
-
-## Revalidation and refresh APIs
-
-All the ways to bust or refresh cache in Next.js, organized by what they actually do.
-
-### Overview
-
-| API | Called from | Clears | Staleness behavior |
-|---|---|---|---|
-| `revalidateTag('tag', 'max')` | Server Action, Route Handler | Data Cache + Full Route Cache (+ Router Cache if SA) | Stale-while-revalidate |
-| `updateTag('tag')` | Server Action only | Data Cache + Full Route Cache + Router Cache | Immediate purge |
-| `revalidatePath('/path')` | Server Action, Route Handler | Data Cache + Full Route Cache (+ Router Cache if SA) | Immediate purge |
-| `refresh()` from `next/cache` | Server Action only | Router Cache only | Re-fetches RSC, keeps Data Cache |
-| `router.refresh()` | Client component | Router Cache only | Re-fetches RSC, keeps Data Cache |
+**On Vercel specifically:** the Full Route Cache (prerendered HTML + RSC payloads) is uploaded as static assets to Vercel's Edge Network during deployment. A user in Berlin requesting `/posts` is served from a Frankfurt CDN node — no origin server involved. The Data Cache is stored in Vercel's persistent KV store, separate from the deployment artifact — new code deploys, KV entries remain. On a self-hosted server, both are just files in `.next/` with no CDN layer unless you set one up.
 
 ---
 
-### `revalidateTag('tag', 'max')` — stale-while-revalidate by tag
+### The Data Cache
 
-Marks cache entries with that tag as stale. Current and next request still get old data. In the background, Next.js refetches and stores fresh data. Visitors after that get fresh. Nobody waits.
+Three things go into it:
 
-Use when: slight staleness is fine. Background content updates (CMS webhook fires when an article is published — readers can see the old version for a moment).
+**`fetch` with caching options:**
 
 ```ts
-// webhook fires when a blog post is published
-export async function POST(req: Request) {
-  await revalidateTag('posts', 'max') // background refresh — no user waiting
+fetch('https://api.example.com/posts', { cache: 'force-cache' })
+fetch('https://api.example.com/posts', { next: { revalidate: 3600 } })
+fetch(`https://api.example.com/posts/${slug}`, { next: { tags: ['posts', `post-${slug}`] } })
+```
+
+In Next.js 15, the default for `fetch` is `no-store` — you must opt in.
+
+**`unstable_cache` — for non-fetch data (DB queries, computations):**
+
+```ts
+import { unstable_cache } from 'next/cache'
+
+const getCachedPosts = unstable_cache(
+  async () => db.posts.findMany({ orderBy: { createdAt: 'desc' } }),
+  ['posts-list'],          // keyParts — part of the cache key
+  { revalidate: 3600, tags: ['posts'] }
+)
+```
+
+**`use cache` — newer directive-based API (Next.js 15+):**
+
+```ts
+async function getCachedPosts() {
+  'use cache'
+  cacheTag('posts')
+  cacheLife('hours')
+  return db.posts.findMany({ orderBy: { createdAt: 'desc' } })
+}
+```
+
+`unstable_cache` is the older function-wrapper approach. `use cache` is the newer directive (like `'use server'`) — can annotate entire components too, and is the direction the framework is moving. Both populate the same Data Cache.
+
+**`keyParts` vs `tags` in `unstable_cache`:**
+- `keyParts` (second arg): determines **which cache entry to look up** — the primary key. Combined with function arguments to form a unique identifier. Prevents key collisions between different functions called with the same arguments.
+- `tags` (options): metadata for **group invalidation**. Don't affect which entry is found — labels stored alongside the entry.
+
+```ts
+getCachedPost('hello')   // key: hash(['post-detail', 'hello']), tags: ['posts']
+getCachedPost('world')   // key: hash(['post-detail', 'world']), tags: ['posts']
+// revalidateTag('posts') → hits both entries
+```
+
+**"Across deployments" — concrete example:**
+You deploy v1 on Monday. `/posts` is visited; Next.js fetches from the API and stores the response with a 1hr TTL. On Tuesday you deploy v2 with a UI change. The Data Cache entry from Monday is still there — Vercel's KV store wasn't wiped by the deployment. `/posts` serves cached data until the TTL expires, even though new code is running.
+
+---
+
+### Tags — the dependency mechanism
+
+A tag is a string label attached to cache entries. Next.js maintains a reverse index server-side:
+
+```
+'posts'        → [hash_abc, hash_def, hash_xyz]
+'post-hello'   → [hash_abc]
+```
+
+When you cache an entry with a tag, Next.js updates this index. `revalidateTag('posts')` looks up the index, gets the entry keys, marks them stale. That's the entire mechanism.
+
+Tags also drive the Data Cache → Full Route Cache cascade: during a route render, every Data Cache access records its tags. The Full Route Cache entry stores those as deps. When any dep tag is invalidated, the Full Route Cache entry is also stale.
+
+```
+Full Route Cache entry for /posts/hello:
+  HTML + RSC payload
+  deps: ['posts', 'post-hello']   ← tags accessed during this render
+```
+
+`revalidateTag('posts')` → find all Full Route Cache entries listing `'posts'` as dep → mark stale.
+
+For `fetch`, tags go in `next.tags`. For `use cache`, call `cacheTag()` inside the function:
+
+```ts
+async function getProducts() {
+  'use cache'
+  cacheTag('products')
+  return db.query('SELECT * FROM products')
 }
 
-// the fetch that gets targeted
-fetch('https://cms.io/posts', { next: { tags: ['posts'] } })
+fetch('https://...', { next: { tags: ['products'] } })
+```
+
+Both are now targetable by `revalidateTag('products')` or `updateTag('products')`.
+
+---
+
+### The Full Route Cache
+
+Stores: prerendered HTML + RSC payload per route. Lives on the server (or CDN edge on Vercel).
+
+Populated two ways:
+
+**1. At build time:** statically analyzable pages. With `generateStaticParams`, specific dynamic paths are pre-rendered.
+
+**2. At runtime — on first request for a path not pre-rendered at build:** Next.js renders the page and stores the result. Every subsequent visitor gets the cached HTML. This is on-demand ISR — the Full Route Cache grows at runtime, not just at build.
+
+```ts
+export async function generateStaticParams() {
+  const posts = await db.posts.findMany()
+  return posts.map(p => ({ slug: p.slug }))
+}
+// returned paths → pre-rendered at build
+// new paths visited at runtime → rendered once, then cached
+// export const dynamicParams = false → unlisted paths 404
 ```
 
 ---
 
-### `updateTag('tag')` — immediate purge by tag (Server Actions only)
+### The Router Cache
 
-Immediately expires the cache entry. The next request after this action is a guaranteed MISS — it fetches fresh and stores it. The user who triggered the action gets fresh data on their next navigation (read-your-own-writes).
+Lives in browser memory. Stores RSC payloads (not HTML) for routes visited or prefetched in the current tab session.
 
-**Correction from earlier notes:** `updateTag` does NOT re-fetch within the same request. It expires the entry. The re-fetch happens on the next request — which, after a `redirect()`, is immediately the user's next page load.
+**Lifecycle:**
+- `<Link>` enters viewport → RSC payload prefetched → stored in Router Cache
+- User clicks → Router Cache hit → instant render, no server round-trip
+- Stale time expires → next navigation re-fetches RSC payload from server
+- Hard reload (`F5`, `Cmd+R`) → Router Cache wiped entirely (in-memory only)
+- New tab → Router Cache starts empty
 
-Use when: the user just mutated something and must see the result of their own action immediately (add to cart, create a post, update profile).
+**Stale times in Next.js 15 (configurable):**
+- Static routes: 5 minutes (`staleTimes.static = 300`)
+- Dynamic routes: 0 seconds (`staleTimes.dynamic = 0`) — every forward navigation re-fetches
+
+"Stale" means the entry won't be used for forward navigation — next click re-fetches. Back/forward still uses the entry regardless of staleness.
+
+**Dynamic routes and prefetching:**
+When a `<Link>` to a dynamic route enters the viewport, only the static shell is prefetched (layouts + `loading.tsx` fallback) — not the page content. Running server code (DB queries, etc.) for pages the user may never visit is too expensive. A category page with 30 visible links would mean 30 server renders on prefetch. Static routes are fully prefetched because they're cached files — essentially free. On click for a dynamic route: shell commits instantly (layout + loading skeleton), then dynamic content streams in.
+
+**Router Cache vs Full Route Cache — different populations:**
+- Router Cache: this user, this tab, this session. Serves soft navigation.
+- Full Route Cache: everyone else. A different user, this user on hard reload, a new tab, search crawlers.
+
+They're complementary. The first-ever visitor to `/posts/new-post` populates the Full Route Cache. That same user navigating away and back uses the Router Cache. A different user hitting the same URL hits the Full Route Cache. Neither is redundant.
+
+---
+
+### Data Cache → Full Route Cache: the cascade
+
+Full Route Cache stores rendered output — output built from data. If data changes, output is stale. Next.js enforces this via tag dependency tracking (described above).
+
+**Direction:**
+- Data Cache invalidation → Full Route Cache automatically stale (via tag deps)
+- `revalidatePath` → also purges Data Cache deps for that route so re-render fetches fresh data (without this, re-rendering would just re-cache the same stale data)
+- Opting out of Full Route Cache (dynamic rendering) → does NOT affect Data Cache
+
+`revalidatePath` forces a re-render with fresh data, but doesn't change the data itself. If the underlying DB/API returns the same data, the re-render produces the same output and re-caches it.
+
+**Opting out of Data Cache cascades to Full Route Cache:**
+
+```ts
+fetch('https://api.example.com/posts', { cache: 'no-store' })
+```
+
+If data must be fresh per-request, caching the rendered output that depended on it is pointless — the output could differ on every request. Next.js detects `no-store` (or dynamic APIs: `cookies()`, `headers()`, `searchParams`) during rendering and marks the route dynamic — excluded from Full Route Cache entirely. No need to also set `export const dynamic = 'force-dynamic'`. Using `no-store` or calling dynamic APIs is the signal.
+
+---
+
+### Invalidation operations
+
+#### `revalidateTag('tag', 'max')` — stale-while-revalidate by tag
+
+Marks entries with that tag as stale. Current (and possibly next) request still gets old data. Background re-fetch runs. Future requests get fresh.
+
+```ts
+// CMS webhook: post published
+export async function POST(req: Request) {
+  await revalidateTag('posts', 'max')   // stale-while-revalidate — no user waiting
+  return Response.json({ ok: true })
+}
+```
+
+Use when: slight staleness is fine. Background content updates.
+
+#### `updateTag('tag')` — immediate purge (Server Actions only)
+
+Immediately deletes the cache entry. Next request is a guaranteed miss — fetches fresh and re-caches. `updateTag` does NOT re-fetch within the same request. It expires the entry. Re-fetch happens on the next request — which, after `redirect()`, is immediately the user's next page load.
 
 ```ts
 export async function addToCart(itemId: string) {
   'use server'
   await db.insertCartItem(itemId)
-  updateTag('cart')       // expire now
-  redirect('/cart')       // next request (this page load) hits a MISS → fresh cart
-}
-
-// the DB query that gets targeted
-async function getCart() {
-  'use cache'
-  cacheTag('cart')        // cacheTag tags use cache blocks (not fetch)
-  return db.query.cart.findMany()
+  updateTag('cart')       // delete now
+  redirect('/cart')       // this page load hits a miss → sees updated cart
 }
 ```
 
----
+Use when: the user who triggered the action must see their own change immediately. If `revalidateTag('cart', 'max')` were used here instead, the user might land on `/cart` and still see the old cart (stale-served).
 
-### `cacheTag` — tagging non-fetch cached data
+If called from a Route Handler: still purges Data Cache + Full Route Cache, but NOT Router Cache (no client receiver — same limitation as all Route Handler invalidations).
 
-`revalidateTag` and `updateTag` originally only worked with `fetch` requests tagged via `next.tags`. For DB queries and other computations cached with `use cache`, use `cacheTag` inside the block to make them targetable.
+#### `revalidatePath('/path')` — immediate purge by path
 
-```ts
-async function getProducts() {
-  'use cache'
-  cacheTag('products')   // now revalidateTag/updateTag can target this
-  return db.query('SELECT * FROM products')
-}
-
-// fetch equivalent (no cacheTag needed — use next.tags directly)
-fetch('https://...', { next: { tags: ['products'] } })
-```
-
----
-
-### `revalidatePath('/path')` — immediate purge by path
-
-Purges Data Cache + Full Route Cache for everything under that path. If called from a Server Action, also clears Router Cache. If called from a Route Handler, Router Cache is NOT cleared (Route Handlers aren't tied to a specific route).
-
-Use when: a mutation affects an entire section and you can't (or don't want to) tag individual cache entries. Heavier than `revalidateTag` — purges everything under the path.
+Purges Full Route Cache + Data Cache deps for that path. Without also purging Data Cache deps, re-rendering would use still-cached data and produce the same output — nothing would visibly change.
 
 ```ts
-// admin deletes a user → purge the entire /users section
-export async function deleteUser(id: string) {
+export async function deletePost(id: string) {
   'use server'
-  await db.deleteUser(id)
-  revalidatePath('/users')  // clears all cached pages under /users
+  await db.posts.delete({ where: { id } })
+  revalidatePath('/posts')
 }
 
-// webhook from payment provider → revalidate a specific order page
-export async function POST(req: Request) {
-  const { orderId } = await req.json()
-  revalidatePath(`/orders/${orderId}`)
-}
+revalidatePath('/posts/[slug]', 'page')   // all /posts/* pages
+revalidatePath('/', 'layout')             // all pages sharing root layout
 ```
 
----
+#### `refresh()` from `next/cache` / `router.refresh()` — Router Cache only
 
-### `refresh()` from `next/cache` — soft Router Cache refresh (Server Action only)
-
-Clears the Router Cache for the current route and tells the client to re-fetch the RSC payload. Does NOT touch Data Cache or Full Route Cache — if data is still cached there, the server re-renders with that cached data.
-
-Use when: something changed that affects the current page's UI but isn't in a cache you want to fully bust (e.g. a flag flipped in server memory, or you just want to force a re-render without invalidating data).
+`refresh()` (Server Action): clears Router Cache for current route, triggers RSC payload re-fetch. Does not touch Data Cache or Full Route Cache.
+`router.refresh()` (Client Component): same behavior, client-side trigger.
 
 ```ts
 export async function toggleFeatureFlag() {
   'use server'
   featureFlags.toggle('new-ui')
-  refresh()  // current page re-renders, no Data Cache purge
+  refresh()  // re-render without busting data cache
 }
 ```
-
----
-
-### `router.refresh()` — same as above but from client
-
-Client-side equivalent of `refresh()`. Clears Router Cache and re-fetches RSC for the current route. Data Cache untouched.
-
-Use when: client-side trigger (button click) needs to force a page re-render without a full page reload and without busting cached data.
 
 ```tsx
 'use client'
@@ -1400,27 +1458,88 @@ export function RefreshButton() {
 }
 ```
 
----
+#### Time-based — `next.revalidate`
 
-### Time-based revalidation — `next.revalidate`
-
-Not a manual call — baked into the fetch. Cache entry is valid for N seconds. After expiry, stale-while-revalidate: first request after expiry gets old data but triggers a background refresh. Good for data that changes on a schedule.
+Baked into the fetch. After N seconds, stale-while-revalidate: first request after expiry gets old data but triggers a background refresh.
 
 ```ts
-// revalidate at most every hour — no manual trigger needed
 fetch('https://...', { next: { revalidate: 3600 } })
+```
+
+All time-based revalidation uses stale-while-revalidate. Manual operations differ: `revalidatePath` and `updateTag` are immediate purges; `revalidateTag(..., 'max')` is stale-while-revalidate.
+
+---
+
+### Server Actions vs Route Handlers: why Router Cache differs
+
+Server Actions have a return channel to the browser. Route Handlers do not.
+
+When a Server Action calls `revalidatePath('/posts')`, Next.js includes the invalidated path in the Flight response. The Next.js router in the browser reads this and removes those entries from Router Cache. The path cleared is whatever you explicitly pass — not inferred from the request URL.
+
+```
+POST /admin/new-post
+Next-Action: abc123            ← identifies the server function
+Body: Flight-encoded args
+
+← Flight response:
+  action return value
+  + "invalidate /posts from Router Cache"   ← piggybacks on the response
+```
+
+Route Handlers are plain HTTP endpoints — the caller might be a cron job, a webhook, a `curl` command. No Next.js client is waiting. There's no mechanism to embed "clear your Router Cache" in the response.
+
+```ts
+// Route Handler — clears Data Cache + Full Route Cache only
+export async function POST(req: Request) {
+  revalidatePath('/posts')
+  return Response.json({ ok: true })
+  // all user browsers: Router Cache unchanged until TTL or hard reload
+}
 ```
 
 ---
 
-### When to use which — decision guide
+### Cookie mutations and Router Cache
+
+`cookies().set()` / `cookies().delete()` in a Server Action automatically clears the Router Cache.
+
+RSC payloads in the Router Cache were rendered with a specific auth state. If a session cookie changes (login/logout), the server would render different payloads for the same routes — auth-gated content, user-specific UI. The cached payloads are now potentially wrong. Next.js clears the Router Cache on cookie mutations via the same Flight response mechanism.
+
+```tsx
+export async function logout() {
+  'use server'
+  cookies().delete('auth-token')   // → Router Cache cleared automatically
+  redirect('/login')
+  // without clearing: back-navigation could show the pre-logout "Welcome, Alice" payload
+}
+```
+
+---
+
+### `fetch` is not memoized in Route Handlers
+
+Request memoization (deduplication within a render pass) only applies inside the React component tree — Layouts, Pages, Server Components, `generateMetadata`, `generateStaticParams`. Route Handlers are NOT part of the component tree, so `fetch` calls there are not deduplicated automatically.
+
+---
+
+### Summary: what each operation clears
+
+| Operation | Data Cache | Full Route Cache | Router Cache |
+|---|---|---|---|
+| `revalidateTag` (Server Action) | ✓ stale | ✓ cascade | ✓ |
+| `revalidateTag` (Route Handler) | ✓ stale | ✓ cascade | ✗ |
+| `updateTag` (Server Action only) | ✓ purged | ✓ cascade | ✓ |
+| `revalidatePath` (Server Action) | ✓ purged | ✓ purged | ✓ |
+| `revalidatePath` (Route Handler) | ✓ purged | ✓ purged | ✗ |
+| `refresh()` / `router.refresh()` | ✗ | ✗ | ✓ current route |
+| `cache: 'no-store'` / dynamic APIs | opted out | opted out (dynamic) | — |
+| `cookies().set/delete` (SA) | ✗ | ✗ | ✓ cleared |
+| Hard browser reload | ✗ | ✗ | ✓ wiped |
+
+### When to use which
 
 - User mutated something, must see their own change immediately → `updateTag`
-- Background content changed (CMS publish, webhook) → `revalidateTag(..., 'max')`
+- Background content changed (CMS webhook) → `revalidateTag(..., 'max')`
 - Entire section affected, tagging impractical → `revalidatePath`
-- Data changes on a schedule, staleness is acceptable → `next.revalidate`
-- Force a page re-render without busting data cache → `refresh()` / `router.refresh()`
-
-- TODO
-  - question: solve a bug related to hydration
-  - the loading thing in /account & /billing
+- Data changes on a schedule → `next.revalidate`
+- Force re-render without busting data cache → `refresh()` / `router.refresh()`
