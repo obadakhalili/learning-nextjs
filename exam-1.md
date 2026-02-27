@@ -32,7 +32,7 @@
 | Q21     | DAL + DTO with React.cache                   | 3/5   | graded  |
 | Q22     | Promise-to-context pattern                   | 4/5   | graded  |
 | Q23     | Intercepted route photo gallery              | 3/5   | graded  |
-| Q24     | Middleware (community)                       | —/5   | pending |
+| Q24     | PPR dashboard component classification       | 3/5   | graded  |
 | Q25     | addToCart cache cascade + implementation     | 3/5   | graded  |
 | Q26     | Streaming (community)                        | —/5   | pending |
 | Q27     | Error boundaries (community)                 | —/5   | pending |
@@ -52,11 +52,11 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 25 / 25 — graded
+**Part 2 (Practice):** 28 / 30 — graded
 **Part 3 (Community):** 3 / 50 — in progress (Q23, Q25 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 71 / ? — in progress
+**Total:** 74 / ? — in progress
 
 ---
 
@@ -865,14 +865,35 @@ Identify: (a) what goes in the static shell, (b) what must be wrapped in `<Suspe
 
 **Your Answer:**
 
-```tsx
-
+```
+a. <h1>Dashboard</h1> & <StaticMetrics /> goes into the static shell
+b. <UserGreeting /> & <RecentActivity userId={...} /> must be wrapped in Suspense
+c. <RecentActivity userId={...} /> should use "use cache"
+d. if cacheComponents is enabled and there is no surrounding suspense boundary with loading ui fallback for dynamic component an error would be thrown
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+(a) Correct: <h1> + <StaticMetrics /> in the static shell. ✓
+(b) Correct: <UserGreeting /> + <RecentActivity /> must be wrapped in Suspense. ✓
+
+(c) Incomplete. RecentActivity is right but two things missing:
+  - cacheLife not specified. The question says it changes every 5 minutes, so the cached
+    function needs cacheLife({ revalidate: 300 }) or equivalent.
+  - UserGreeting reads cookies() — this is a key constraint: cookies() cannot be called
+    INSIDE a 'use cache' function. You must read cookies() outside in the component, then
+    pass the value as a plain argument into a cached function. This wasn't flagged at all.
+
+(d) Vague. "No Suspense boundary for dynamic component" is one issue, but the more specific
+    build error comes from calling a dynamic API (cookies(), headers(), searchParams) directly
+    inside a 'use cache' function — that throws at build time. The missing Suspense is a
+    separate error: PPR requires dynamic holes to be Suspense-wrapped so the static shell
+    boundary is unambiguous.
+
+Implementation skipped (explicitly).
 ```
 
 ---
