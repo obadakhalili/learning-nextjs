@@ -36,7 +36,7 @@
 | Q25 | addToCart cache cascade + implementation  | 3/5   | graded  |
 | Q26 | RSC vs SSR difference                     | 3/5   | graded  |
 | Q27 | Parallel routes use case                  | 2/5   | graded  |
-| Q28 | ISR stale-while-revalidate                | —/5   | pending |
+| Q28 | ISR stale-while-revalidate                | 3/5   | graded  |
 | Q29 | Proxy runtime + limitations               | —/5   | pending |
 | Q30 | generateStaticParams + dynamicParams      | —/5   | pending |
 | Q31 | Streaming at HTTP level + Suspense        | —/5   | pending |
@@ -1006,13 +1006,15 @@ What is Incremental Static Regeneration (ISR)? How does the stale-while-revalida
 **Your Answer:**
 
 ```
-
+ISR is the idea to revalidate the cache entry of a static route/component rendered at built time based on time or certain event.
+stale-while-revalidate means it is okay to serve stale cache entry after cache expires until new cache entry is set.
+the user still sees the stale cache entry, but first access to cache to get a cache entry that is still will trigger fetchig a fresh entry.
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. ISR definition is correct. SWR model is understood (serve stale, trigger regen in background). The key missing precision: it takes two requests after expiry to see fresh content — first request after expiry gets the stale page and triggers background regeneration, second request gets the fresh page. The answer doesn't make this two-request sequence explicit. "Certain event" could be named more precisely as on-demand revalidation via revalidateTag/revalidatePath. Last sentence also appears to be incomplete.
 ```
 
 ---
