@@ -24,12 +24,38 @@
 | Q13 | page.tsx vs default.tsx in slots | 1/5 | graded |
 | Q14 | Route Handler / Server Action misuses | 3/5 | graded |
 | Q15 | use cache two modes | 2/5 | graded |
+| Q16 | Preloading pattern implementation | 3/5 | graded |
+| Q17 | useActionState + useFormStatus form | —/5 | pending |
+| Q18 | Parallel routes modal pattern | —/5 | pending |
+| Q19 | DAL with verifySession | —/5 | pending |
+| Q20 | ISR + on-demand revalidation | —/5 | pending |
+| Q21 | RSC vs SSR (community) | —/5 | pending |
+| Q22 | Parallel routes (community) | —/5 | pending |
+| Q23 | ISR (community) | —/5 | pending |
+| Q24 | Middleware (community) | —/5 | pending |
+| Q25 | generateStaticParams (community) | —/5 | pending |
+| Q26 | Streaming (community) | —/5 | pending |
+| Q27 | Error boundaries (community) | —/5 | pending |
+| Q28 | Route Handlers vs Server Actions (community) | —/5 | pending |
+| Q29 | Intercepting routes (community) | —/5 | pending |
+| Q30 | next/image (community) | —/5 | pending |
+| Q31 | Open / creative | —/5 | pending |
+| Q32 | Open / creative | —/5 | pending |
+| Q33 | Open / creative | —/5 | pending |
+| Q34 | Open / creative | —/5 | pending |
+| Q35 | Open / creative | —/5 | pending |
+| Q36 | Open / creative | —/5 | pending |
+| Q37 | Open / creative | —/5 | pending |
+| Q38 | Open / creative | —/5 | pending |
+| Q39 | Open / creative | —/5 | pending |
+| Q40 | Open / creative | —/5 | pending |
+| Q41–Q50 | (see exam) | — | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** — / ? — pending
-**Part 3 (Community):** — / ? — pending
-**Part 4 (Open):** — / ? — pending
-**Total:** 40 / ? — in progress
+**Part 2 (Practice):** 3 / 25 — in progress (Q16 graded)
+**Part 3 (Community):** — / 50 — pending
+**Part 4 (Open):** — / 50 — pending
+**Total:** 43 / ? — in progress
 
 ---
 
@@ -461,7 +487,28 @@ Show the full implementation including the `React.cache` wrapper and the `preloa
 
 **Grade & Notes:**
 ```
+3/5
 
+The core preloading mechanic is correct: calling memoizedFetchProductDetails(id) without await
+fires the query immediately, then independantAsyncOperation() runs while the fetch is in flight.
+When ProductDetails calls the same memoized function, React.cache returns the cached result
+(no second DB call). Parallelism works.
+
+Two requirements missed:
+
+1. No conditional null return. The result of independantAsyncOperation() (standing in for
+   checkAvailability) is never used. The implementation should do:
+     const available = await checkAvailability(id)
+     if (!available) return null
+   Without this, the component always renders ProductDetails regardless of availability.
+
+2. No preload helper function. The question asks to show the preload helper explicitly:
+     export function preload(id: string) { void memoizedFetchProductDetails(id) }
+   This is the named abstraction that lets callers fire the query early (e.g., from a parent
+   layout or at the top of the page) without knowing the internals. Inlining the call works
+   functionally but misses the pattern.
+
+Minor: typo in memoiozedFetchProductDetails.
 ```
 
 ---
