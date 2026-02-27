@@ -30,7 +30,7 @@
 | Q19     | Parallel slot @preview structure             | 5/5   | graded  |
 | Q20     | ActiveLink in static shell fix               | 3/5   | graded  |
 | Q21     | DAL + DTO with React.cache                   | 3/5   | graded  |
-| Q22     | Parallel routes (community)                  | —/5   | pending |
+| Q22     | Promise-to-context pattern                   | 4/5   | graded  |
 | Q23     | ISR (community)                              | —/5   | pending |
 | Q24     | Middleware (community)                       | —/5   | pending |
 | Q25     | generateStaticParams (community)             | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 21 / 25 — graded (Q16–Q21)
+**Part 2 (Practice):** 25 / 25 — graded (Q16–Q22)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 61 / ? — in progress
+**Total:** 65 / ? — in progress
 
 ---
 
@@ -772,13 +772,29 @@ Show: the context file, the client provider, the layout, and an example consumer
 **Your Answer:**
 
 ```tsx
-
+// see src/app/exam-1/app/user/layout.tsx, _components/user-provider.tsx, _components/user-info.tsx
 ```
 
 **Grade & Notes:**
 
 ```
+4/5
 
+Clean, correct implementation of the pattern. All four pieces are present:
+
+- Layout: calls getOwnProfileDTO() without await — gets the Promise, passes it to UserProvider.
+  Layout doesn't block rendering. ✓
+- Provider: UserContext holds Promise<User> (not the resolved value). Correct type. ✓
+- Consumer (UserInfo): reads Promise from context via useContext, unwraps with use(promise).
+  This suspends the consumer, not the layout. ✓
+- Page: wraps <UserInfo /> in its own fine-grained <Suspense> — not a coarse layout-wide one. ✓
+
+One nuance worth knowing: getOwnProfileDTO() internally calls cookies() (via verifyUserSession).
+Even without await, calling the async function starts executing up to its first internal await,
+and cookies() is in that chain. Next.js may detect this as a dynamic signal even in an unawaited
+Promise, preventing the layout from truly staying in the static shell. The clean version of this
+pattern passes the Promise from a parent dynamic hole down into the layout, rather than starting
+the dynamic fetch inside the layout itself.
 ```
 
 ---
