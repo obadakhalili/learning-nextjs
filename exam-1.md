@@ -7,63 +7,63 @@
 
 ## Grading Summary
 
-| Q   | Topic                                     | Score | Status  |
-| --- | ----------------------------------------- | ----- | ------- |
-| Q1  | Two RSC rendering passes                  | 3/5   | graded  |
-| Q2  | layout.tsx vs template.tsx                | 2/5   | graded  |
-| Q3  | Why params is a Promise                   | 3/5   | graded  |
-| Q4  | 'use client' module boundary              | 2/5   | graded  |
-| Q5  | Four cache layers                         | 3/5   | graded  |
-| Q6  | { cache: 'no-store' } dual effect         | 4/5   | graded  |
-| Q7  | Preloading pattern with React.cache       | 3/5   | graded  |
-| Q8  | revalidateTag vs updateTag                | 4/5   | graded  |
-| Q9  | self.__next_f.push                        | 2/5   | graded  |
-| Q10 | Soft vs hard navigation                   | 3/5   | graded  |
-| Q11 | Hiding UI is not security                 | 2/5   | graded  |
-| Q12 | cacheComponents flag                      | 3/5   | graded  |
-| Q13 | page.tsx vs default.tsx in slots          | 1/5   | graded  |
-| Q14 | Route Handler / Server Action misuses     | 3/5   | graded  |
-| Q15 | use cache two modes                       | 2/5   | graded  |
-| Q16 | Preloading pattern implementation         | 3/5   | graded  |
-| Q17 | useActionState + useFormStatus form       | 3/5   | graded  |
-| Q18 | Route handler + use cache on sub-function | 4/5   | graded  |
-| Q19 | Parallel slot @preview structure          | 5/5   | graded  |
-| Q20 | ActiveLink in static shell fix            | 3/5   | graded  |
-| Q21 | DAL + DTO with React.cache                | 3/5   | graded  |
-| Q22 | Promise-to-context pattern                | 4/5   | graded  |
-| Q23 | Intercepted route photo gallery           | 3/5   | graded  |
-| Q24 | PPR dashboard component classification    | 3/5   | graded  |
-| Q25 | addToCart cache cascade + implementation  | 3/5   | graded  |
-| Q26 | RSC vs SSR difference                     | 3/5   | graded  |
-| Q27 | Parallel routes use case                  | 2/5   | graded  |
-| Q28 | ISR stale-while-revalidate                | 3/5   | graded  |
-| Q29 | Proxy runtime + limitations               | 3/5   | graded  |
-| Q30 | generateStaticParams + dynamicParams      | 3/5   | graded  |
-| Q31 | Streaming at HTTP level + Suspense        | 3/5   | graded  |
-| Q32 | error.tsx + reset() behavior              | 4/5   | graded  |
-| Q33 | Route Handlers vs Server Actions          | 3/5   | graded  |
-| Q34 | Intercepting routes + canonical rule      | 2/5   | graded  |
-| Q35 | next/image optimizations                  | 1/5   | graded  |
-| Q36 | ISR vs PPR trade-off                      | —/5   | pending |
-| Q37 | revalidateTag cache cascade walkthrough   | —/5   | pending |
-| Q38 | Auth gotcha (layout-only protection)      | —/5   | pending |
-| Q39 | loading.tsx not showing debug             | —/5   | pending |
-| Q40 | not-found.tsx route vs resource 404       | —/5   | pending |
-| Q41 | React.cache scope isolation               | —/5   | pending |
-| Q42 | Prefetching deep dive                     | —/5   | pending |
-| Q43 | Flight protocol                           | —/5   | pending |
-| Q44 | useActionState internals                  | —/5   | pending |
-| Q45 | Architecture design (rendering strategies)| —/5   | pending |
-| Q46 | use() vs await                            | —/5   | pending |
-| Q47 | Hydration mismatch                        | —/5   | pending |
-| Q48 | pushState vs router.push                  | —/5   | pending |
-| Q49 | Server component inside client component  | —/5   | pending |
-| Q50 | Static shell mental model                 | —/5   | pending |
+| Q   | Topic                                      | Score | Status  |
+| --- | ------------------------------------------ | ----- | ------- |
+| Q1  | Two RSC rendering passes                   | 3/5   | graded  |
+| Q2  | layout.tsx vs template.tsx                 | 2/5   | graded  |
+| Q3  | Why params is a Promise                    | 3/5   | graded  |
+| Q4  | 'use client' module boundary               | 2/5   | graded  |
+| Q5  | Four cache layers                          | 3/5   | graded  |
+| Q6  | { cache: 'no-store' } dual effect          | 4/5   | graded  |
+| Q7  | Preloading pattern with React.cache        | 3/5   | graded  |
+| Q8  | revalidateTag vs updateTag                 | 4/5   | graded  |
+| Q9  | self.\_\_next_f.push                       | 2/5   | graded  |
+| Q10 | Soft vs hard navigation                    | 3/5   | graded  |
+| Q11 | Hiding UI is not security                  | 2/5   | graded  |
+| Q12 | cacheComponents flag                       | 3/5   | graded  |
+| Q13 | page.tsx vs default.tsx in slots           | 1/5   | graded  |
+| Q14 | Route Handler / Server Action misuses      | 3/5   | graded  |
+| Q15 | use cache two modes                        | 2/5   | graded  |
+| Q16 | Preloading pattern implementation          | 3/5   | graded  |
+| Q17 | useActionState + useFormStatus form        | 3/5   | graded  |
+| Q18 | Route handler + use cache on sub-function  | 4/5   | graded  |
+| Q19 | Parallel slot @preview structure           | 5/5   | graded  |
+| Q20 | ActiveLink in static shell fix             | 3/5   | graded  |
+| Q21 | DAL + DTO with React.cache                 | 3/5   | graded  |
+| Q22 | Promise-to-context pattern                 | 4/5   | graded  |
+| Q23 | Intercepted route photo gallery            | 3/5   | graded  |
+| Q24 | PPR dashboard component classification     | 3/5   | graded  |
+| Q25 | addToCart cache cascade + implementation   | 3/5   | graded  |
+| Q26 | RSC vs SSR difference                      | 3/5   | graded  |
+| Q27 | Parallel routes use case                   | 2/5   | graded  |
+| Q28 | ISR stale-while-revalidate                 | 3/5   | graded  |
+| Q29 | Proxy runtime + limitations                | 3/5   | graded  |
+| Q30 | generateStaticParams + dynamicParams       | 3/5   | graded  |
+| Q31 | Streaming at HTTP level + Suspense         | 3/5   | graded  |
+| Q32 | error.tsx + reset() behavior               | 4/5   | graded  |
+| Q33 | Route Handlers vs Server Actions           | 3/5   | graded  |
+| Q34 | Intercepting routes + canonical rule       | 2/5   | graded  |
+| Q35 | next/image optimizations                   | 1/5   | graded  |
+| Q36 | ISR vs PPR trade-off                       | —/5   | pending |
+| Q37 | revalidateTag cache cascade walkthrough    | —/5   | pending |
+| Q38 | Auth gotcha (layout-only protection)       | —/5   | pending |
+| Q39 | loading.tsx not showing debug              | —/5   | pending |
+| Q40 | not-found.tsx route vs resource 404        | —/5   | pending |
+| Q41 | React.cache scope isolation                | —/5   | pending |
+| Q42 | Prefetching deep dive                      | —/5   | pending |
+| Q43 | Flight protocol                            | —/5   | pending |
+| Q44 | useActionState internals                   | —/5   | pending |
+| Q45 | Architecture design (rendering strategies) | —/5   | pending |
+| Q46 | use() vs await                             | —/5   | pending |
+| Q47 | Hydration mismatch                         | —/5   | pending |
+| Q48 | pushState vs router.push                   | —/5   | pending |
+| Q49 | Server component inside client component   | —/5   | pending |
+| Q50 | Static shell mental model                  | —/5   | pending |
 
-**Part 1 (Concept, Q1–Q15):**   40 / 75  — graded
-**Part 2 (Practice, Q16–Q25):**  34 / 50  — graded
-**Part 3 (Community, Q26–Q35):** 27 / 50   — graded
-**Part 4 (Open, Q36–Q50):**      — / 75   — pending
+**Part 1 (Concept, Q1–Q15):** 40 / 75 — graded
+**Part 2 (Practice, Q16–Q25):** 34 / 50 — graded
+**Part 3 (Community, Q26–Q35):** 27 / 50 — graded
+**Part 4 (Open, Q36–Q50):** — / 75 — pending
 **Total:** 74 / 250 — in progress
 
 ---
