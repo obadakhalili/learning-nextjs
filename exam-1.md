@@ -35,7 +35,7 @@
 | Q24 | PPR dashboard component classification    | 3/5   | graded  |
 | Q25 | addToCart cache cascade + implementation  | 3/5   | graded  |
 | Q26 | RSC vs SSR difference                     | 3/5   | graded  |
-| Q27 | Parallel routes use case                  | —/5   | pending |
+| Q27 | Parallel routes use case                  | 2/5   | graded  |
 | Q28 | ISR stale-while-revalidate                | —/5   | pending |
 | Q29 | Proxy runtime + limitations               | —/5   | pending |
 | Q30 | generateStaticParams + dynamicParams      | —/5   | pending |
@@ -986,13 +986,15 @@ What are parallel routes? Give a real-world use case where they provide value ov
 **Your Answer:**
 
 ```
-
+parallel routes refer to the ability to render multiple components in parallel given the same route.
+rendering components side by side isn't entirely the same thing because it isn't possible to have the components rendered next to each other to response to route change.
+with parallel routes using slots, it is possible to render multiple component branches given one route, and change the parallel components on subroute changes.
 ```
 
 **Grade & Notes:**
 
 ```
-
+2/5. Correctly identifies slots and that they respond to sub-route changes independently — that's the core insight. But it's too vague to demonstrate real understanding, and the question explicitly asked for a real-world use case which is entirely missing. A good answer would name something like: a dashboard where the sidebar navigates to different filter views while the main content navigates independently (each with its own loading.tsx/error.tsx). Other missing points: each slot has its own sub-route tree, independent loading states, independent error boundaries, and default.tsx fallback when no sub-route matches.
 ```
 
 ---
