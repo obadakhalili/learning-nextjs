@@ -26,7 +26,7 @@
 | Q15     | use cache two modes                          | 2/5   | graded  |
 | Q16     | Preloading pattern implementation            | 3/5   | graded  |
 | Q17     | useActionState + useFormStatus form          | 3/5   | graded  |
-| Q18     | Parallel routes modal pattern                | —/5   | pending |
+| Q18     | Route handler + use cache on sub-function    | 4/5   | graded  |
 | Q19     | DAL with verifySession                       | —/5   | pending |
 | Q20     | ISR + on-demand revalidation                 | —/5   | pending |
 | Q21     | RSC vs SSR (community)                       | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 6 / 25 — in progress (Q16–Q17 graded)
+**Part 2 (Practice):** 10 / 25 — in progress (Q16–Q18 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 46 / ? — in progress
+**Total:** 50 / ? — in progress
 
 ---
 
@@ -608,13 +608,30 @@ Implement the route handler and `getProducts()` so the DB query is cached across
 **Your Answer:**
 
 ```ts
-
+// see src/app/exam-1/api/products/route.ts
 ```
 
 **Grade & Notes:**
 
 ```
+4/5
 
+Correct pattern: handler reads Authorization header (stays dynamic), getProducts() uses
+'use cache' + cacheLife (cached across requests). The separation is exactly right — the
+handler itself is never cached, but the expensive sub-operation is.
+
+One real issue: getProducts() must be async for 'use cache' to work. It's a directive
+for async functions. The function and the call in the handler both need async/await:
+
+  async function getProducts() {
+    'use cache'
+    cacheLife({ revalidate: 60 * 60 })
+    return db.query(...)
+  }
+  const products = await getProducts()
+
+Minor: cacheLife('hours') is the cleaner equivalent — named profiles exist so you
+don't have to calculate seconds manually.
 ```
 
 ---
