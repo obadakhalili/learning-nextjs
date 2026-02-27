@@ -38,7 +38,7 @@
 | Q27 | Parallel routes use case                  | 2/5   | graded  |
 | Q28 | ISR stale-while-revalidate                | 3/5   | graded  |
 | Q29 | Proxy runtime + limitations               | 3/5   | graded  |
-| Q30 | generateStaticParams + dynamicParams      | —/5   | pending |
+| Q30 | generateStaticParams + dynamicParams      | 3/5   | graded  |
 | Q31 | Streaming at HTTP level + Suspense        | —/5   | pending |
 | Q32 | error.tsx + reset() behavior              | —/5   | pending |
 | Q33 | Route Handlers vs Server Actions          | —/5   | pending |
@@ -1047,13 +1047,14 @@ What is `generateStaticParams`? Explain on-demand static generation — what hap
 **Your Answer:**
 
 ```
-
+- `generateStaticParams` is a function that generates possible values for a route's slug which is used at build time to prerender the route
+- on-demand static generation is static routes rendered at runtime because the slug value wasn't available at build time. the static parts are rendered at runtime and stored at full route cache
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. generateStaticParams definition is correct. On-demand static generation is correctly described (rendered at first request, stored in Full Route Cache). But dynamicParams is entirely missing despite being explicitly asked about. dynamicParams = true (default) enables on-demand rendering for unlisted paths; dynamicParams = false makes Next.js return a 404 for any path not returned by generateStaticParams.
 ```
 
 ---
