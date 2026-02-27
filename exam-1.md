@@ -31,7 +31,7 @@
 | Q20     | ActiveLink in static shell fix               | 3/5   | graded  |
 | Q21     | DAL + DTO with React.cache                   | 3/5   | graded  |
 | Q22     | Promise-to-context pattern                   | 4/5   | graded  |
-| Q23     | ISR (community)                              | —/5   | pending |
+| Q23     | Intercepted route photo gallery              | 3/5   | graded  |
 | Q24     | Middleware (community)                       | —/5   | pending |
 | Q25     | generateStaticParams (community)             | —/5   | pending |
 | Q26     | Streaming (community)                        | —/5   | pending |
@@ -52,10 +52,11 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 25 / 25 — graded (Q16–Q22)
+**Part 2 (Practice):** 25 / 25 — graded
+**Part 3 (Community):** 3 / 50 — in progress (Q23 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 65 / ? — in progress
+**Total:** 68 / ? — in progress
 
 ---
 
@@ -812,13 +813,38 @@ Show the directory structure and write the interceptor page and the canonical pa
 **Your Answer:**
 
 ```
-
+// see src/app/exam-1/gallery/
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+The interception mechanics work for what was built, but the routing structure doesn't match
+the requirement. The question asks for /photos/[id] as a top-level canonical route (outside
+gallery). The user placed the canonical at gallery/photos/[id] and used (.) (same-level
+interception). That's self-consistent but wrong for the spec — the canonical should be
+accessible at /photos/[id], not /gallery/photos/[id].
+
+The correct structure for intercepting a parent-level route from /gallery:
+
+  gallery/
+    page.tsx                    — links to /photos/[id]
+    (..)photos/[id]/page.tsx    — interceptor using (..) (one level up)
+  photos/
+    [id]/page.tsx               — canonical at /photos/[id]
+
+(..) means "intercept a route one segment up". (.) means "same level" — so (.)photos only
+works against gallery/photos/[id], not the top-level /photos/[id].
+
+Also missing: no modal overlay. The question asks for the intercepted view rendered "on top
+of /gallery" — meaning gallery content stays visible beneath the modal. This requires a
+parallel @modal slot in the gallery layout. Without it, the intercepted page replaces the
+gallery content rather than overlaying it.
+
+The concept of interception is understood (separate canonical vs intercepted pages, soft vs
+hard nav behavior) — but the wrong convention and no modal UI.
 ```
 
 ---
