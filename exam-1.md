@@ -43,7 +43,7 @@
 | Q32 | error.tsx + reset() behavior              | 4/5   | graded  |
 | Q33 | Route Handlers vs Server Actions          | 3/5   | graded  |
 | Q34 | Intercepting routes + canonical rule      | 2/5   | graded  |
-| Q35 | next/image optimizations                  | —/5   | pending |
+| Q35 | next/image optimizations                  | 1/5   | graded  |
 | Q36 | ISR vs PPR trade-off                      | —/5   | pending |
 | Q37 | revalidateTag cache cascade walkthrough   | —/5   | pending |
 | Q38 | Auth gotcha (layout-only protection)      | —/5   | pending |
@@ -62,7 +62,7 @@
 
 **Part 1 (Concept, Q1–Q15):**   40 / 75  — graded
 **Part 2 (Practice, Q16–Q25):**  34 / 50  — graded
-**Part 3 (Community, Q26–Q35):** — / 50   — pending
+**Part 3 (Community, Q26–Q35):** 27 / 50   — graded
 **Part 4 (Open, Q36–Q50):**      — / 75   — pending
 **Total:** 74 / 250 — in progress
 
@@ -1141,13 +1141,13 @@ What is the `next/image` component and why does it exist? List at least 4 optimi
 **Your Answer:**
 
 ```
-
+a special component that wraps image html element which does some optimizations that honestly i have no idea what they are.
 ```
 
 **Grade & Notes:**
 
 ```
-
+1/5. User self-acknowledged no knowledge. For reference: next/image wraps <img> with automatic optimization to improve LCP/CLS. 4 key optimizations: (1) automatic format conversion to WebP/AVIF, (2) responsive srcset generation based on sizes prop, (3) lazy loading by default, (4) CLS prevention by requiring width/height to reserve space. Trade-off: external image domains must be whitelisted in next.config.js; fill mode requires parent to have position: relative.
 ```
 
 ---
