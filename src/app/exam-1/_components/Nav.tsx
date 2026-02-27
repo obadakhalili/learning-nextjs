@@ -4,10 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const routes = [
-  "/exam-1/editor",
-  "/exam-1/editor/tab",
-  "/exam-1/form",
-  "/exam-1/preloading/\\d*",
+  {
+    regex: "^/exam-1/editor$",
+    link: "/exam-1/editor",
+  },
+  {
+    regex: "^/exam-1/editor/tab$",
+    link: "/exam-1/editor/tab",
+  },
+  {
+    regex: "^/exam-1/form$",
+    link: "/exam-1/form",
+  },
+  {
+    regex: "^/exam-1/preloading/\\d*$",
+    link: "/exam-1/preloading/1",
+  },
 ];
 
 export function Nav() {
@@ -15,13 +27,12 @@ export function Nav() {
 
   return (
     <ul>
-      {routes.map((link) => (
+      {routes.map(({ link, regex }) => (
         <li key={link}>
           <Link
             href={link}
             style={{
-              color:
-                res === link || new RegExp(link).test(res) ? "red" : "black",
+              color: new RegExp(regex).test(res) ? "red" : "black",
             }}
           >
             {link}
