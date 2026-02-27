@@ -20,6 +20,10 @@ const routes = [
     regex: "^/exam-1/preloading/\\d*$",
     link: "/exam-1/preloading/1",
   },
+  {
+    regex: "^/exam-1/app$",
+    link: "/exam-1/app",
+  },
 ];
 
 export function Nav() {

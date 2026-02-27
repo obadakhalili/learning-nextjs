@@ -29,7 +29,7 @@
 | Q18     | Route handler + use cache on sub-function    | 4/5   | graded  |
 | Q19     | Parallel slot @preview structure             | 5/5   | graded  |
 | Q20     | ActiveLink in static shell fix               | 3/5   | graded  |
-| Q21     | RSC vs SSR (community)                       | —/5   | pending |
+| Q21     | DAL + DTO with React.cache                   | 3/5   | graded  |
 | Q22     | Parallel routes (community)                  | —/5   | pending |
 | Q23     | ISR (community)                              | —/5   | pending |
 | Q24     | Middleware (community)                       | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 18 / 25 — in progress (Q16–Q20 graded)
+**Part 2 (Practice):** 21 / 25 — graded (Q16–Q21)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 58 / ? — in progress
+**Total:** 61 / ? — in progress
 
 ---
 
@@ -730,13 +730,31 @@ Show how `React.cache` is used, and explain why it matters.
 **Your Answer:**
 
 ```ts
-
+// see src/app/exam-1/app/_lib/users.ts and app/admin/page.tsx, app/user/page.tsx
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+The architecture is right: auth is enforced in the DAL (not just at layout level), getUser()
+is wrapped in React.cache, and auth cascades — getOwnProfileDTO and getAdminProfileDTO both
+call getUser() which calls verifyUserSession(), so every data access is protected.
+
+Two gaps:
+
+1. getAdminProfileDTO() doesn't take a targetId. The question asks for getAdminUserDTO(targetId)
+   where an admin can look up any user's full record. The implementation just returns the current
+   admin's own profile — which is effectively the same as getOwnProfileDTO() for admins.
+   The meaningful distinction is: admin can access OTHER users' data by ID.
+
+2. No explanation of why React.cache matters. The question explicitly asks for it. The answer:
+   getUser() is React.cache'd so that if multiple server components in the same request call it
+   (e.g. layout + page + a child component), only one cookie read and DB lookup happens.
+   Without React.cache, each call re-decodes the cookie and re-queries independently.
+
+Minor: verifyUserSession() returns a username string — question specified returning { userId }.
 ```
 
 ---
