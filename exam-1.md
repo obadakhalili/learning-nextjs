@@ -37,7 +37,7 @@
 | Q26 | RSC vs SSR difference                     | 3/5   | graded  |
 | Q27 | Parallel routes use case                  | 2/5   | graded  |
 | Q28 | ISR stale-while-revalidate                | 3/5   | graded  |
-| Q29 | Proxy runtime + limitations               | —/5   | pending |
+| Q29 | Proxy runtime + limitations               | 3/5   | graded  |
 | Q30 | generateStaticParams + dynamicParams      | —/5   | pending |
 | Q31 | Streaming at HTTP level + Suspense        | —/5   | pending |
 | Q32 | error.tsx + reset() behavior              | —/5   | pending |
@@ -1026,13 +1026,16 @@ What is Next.js Middleware (now called Proxy)? What runtime does it execute in, 
 **Your Answer:**
 
 ```
-
+- a function that runs between every request that goes from the client to the server (if it matches the matched config if configured)
+- it runs in a separate process with stripped js runtime. no browser or node apis, just a v8 engine to run js, which means it can't be used to access the db or use any non-standard js apis
+- usually used for route protection as part of larger auth implementation, a/b testing, and other similar use cases
+- by default the process runs on the same server running the nextjs app, but some deployment platforms like vercel deploy the proxy function to an edge runtime. it is similar to cdn for static assets but it is for code, so it can be distributed across locations and serving multiple users
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. Good definition and use cases. The runtime description is mostly right (no Node.js APIs, can't access DB) but "no browser APIs" is incorrect — the Edge Runtime does expose Web Platform APIs (fetch, Request, Response, Headers, cookies, etc.). The auth limitation is identified (no DB access) but not fully explained: the precise issue is that middleware can only inspect a JWT's shape/signature locally; it cannot check whether the token has been revoked (requires a DB/session store lookup). The edge deployment explanation conflates two separate things: the Edge Runtime (always used by middleware regardless of platform) vs deploying to an edge *network* (distributed across locations — that's Vercel-specific). These are different concepts.
 ```
 
 ---
