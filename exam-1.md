@@ -25,7 +25,7 @@
 | Q14     | Route Handler / Server Action misuses        | 3/5   | graded  |
 | Q15     | use cache two modes                          | 2/5   | graded  |
 | Q16     | Preloading pattern implementation            | 3/5   | graded  |
-| Q17     | useActionState + useFormStatus form          | —/5   | pending |
+| Q17     | useActionState + useFormStatus form          | 3/5   | graded  |
 | Q18     | Parallel routes modal pattern                | —/5   | pending |
 | Q19     | DAL with verifySession                       | —/5   | pending |
 | Q20     | ISR + on-demand revalidation                 | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 3 / 25 — in progress (Q16 graded)
+**Part 2 (Practice):** 6 / 25 — in progress (Q16–Q17 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 43 / ? — in progress
+**Total:** 46 / ? — in progress
 
 ---
 
@@ -560,13 +560,38 @@ Show the server action and the form component.
 **Your Answer:**
 
 ```tsx
-
+// see src/app/exam-1/form/
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+Server action is solid: correct "use server" directive, correct (prevState, formData) signature,
+proper field validation, returns { errors } on failure and { success } on success. Good.
+
+useActionState usage is correct: [state, action, pending] destructuring, action wired to
+form's action prop, per-field error display, button disabled while pending.
+
+Main miss: useFormStatus was not used. The question explicitly requires both hooks.
+The pending value came from useActionState's third return value, not useFormStatus.
+The distinction matters: useFormStatus must be called inside a CHILD of the <form> element —
+that's a React context constraint. The pattern is to extract a SubmitButton component:
+
+  // submit-button.tsx
+  "use client"
+  import { useFormStatus } from "react-dom"
+  export function SubmitButton() {
+    const { pending } = useFormStatus()
+    return <button disabled={pending}>{pending ? "Saving..." : "Submit"}</button>
+  }
+
+The child-of-form rule is the key thing useFormStatus teaches. Skipping it means missing
+why the hook exists as a separate primitive from useActionState.
+
+Minor: button text is "Submitting..." instead of "Saving..." (question specified the text).
+Also errors?: vs errors: ... | null — functionally equivalent but question specified null.
 ```
 
 ---
