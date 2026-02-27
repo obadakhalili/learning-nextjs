@@ -41,7 +41,7 @@
 | Q30 | generateStaticParams + dynamicParams      | 3/5   | graded  |
 | Q31 | Streaming at HTTP level + Suspense        | 3/5   | graded  |
 | Q32 | error.tsx + reset() behavior              | 4/5   | graded  |
-| Q33 | Route Handlers vs Server Actions          | —/5   | pending |
+| Q33 | Route Handlers vs Server Actions          | 3/5   | graded  |
 | Q34 | Intercepting routes + canonical rule      | —/5   | pending |
 | Q35 | next/image optimizations                  | —/5   | pending |
 | Q36 | ISR vs PPR trade-off                      | —/5   | pending |
@@ -1104,13 +1104,13 @@ What is the difference between Route Handlers and Server Actions? For each, stat
 **Your Answer:**
 
 ```
-
+Route Handlers are public http endpoints served by nextjs app at runtime and not available at build time. they are defined inside `route.ts` file and usually used for data fetching or as web hooks callbacks. server actions are special case of server functions which are functions defined on the server and called in the client. when the client calls a server function, it calls a stub that has the same name and definition and internally calls a function which does a server request to the same url the component that did the call lives in but with next action header set to the server action identifier in the server, used for data mutation.
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. Good conceptual understanding of both, and the Server Action implementation detail (Next-Action header, stub function, POST to same URL) is impressive. But the question asked for a specific structure that's mostly missing: HTTP methods not stated for either (Route Handlers: any method; Server Actions: always POST), and "when Next.js chooses it" is not addressed (Route Handlers = external/public endpoints for third parties or webhooks; Server Actions = internal mutations within the app). Also, "Route Handlers not available at build time" is partially wrong — GET handlers can be statically cached at build time if they avoid dynamic APIs.
 ```
 
 ---
