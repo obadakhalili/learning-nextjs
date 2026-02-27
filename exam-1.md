@@ -39,7 +39,7 @@
 | Q28 | ISR stale-while-revalidate                | 3/5   | graded  |
 | Q29 | Proxy runtime + limitations               | 3/5   | graded  |
 | Q30 | generateStaticParams + dynamicParams      | 3/5   | graded  |
-| Q31 | Streaming at HTTP level + Suspense        | —/5   | pending |
+| Q31 | Streaming at HTTP level + Suspense        | 3/5   | graded  |
 | Q32 | error.tsx + reset() behavior              | —/5   | pending |
 | Q33 | Route Handlers vs Server Actions          | —/5   | pending |
 | Q34 | Intercepting routes + canonical rule      | —/5   | pending |
@@ -1066,13 +1066,15 @@ What is streaming in Next.js App Router? Explain how it works at the HTTP level,
 **Your Answer:**
 
 ```
-
+streaming is the idea that a page for a given route is sent to the browser in chunks. usually the initial chunk contains the static parts, and the dynamic parts are served as part of later chunks in the same kept-open connection.
+Suspense is an important part of this idea because async suspended components are replcaed with the static fallback shell until the component resolves and is served later in the stream.
+prefetching is a separate idea that refers to routes mentioned in `Link` components are prefetched when their components enter the viewport
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. Streaming concept and Suspense relationship are both correct. The HTTP level is vague — "kept-open connection" is directionally right but the specific mechanism is chunked transfer encoding (Transfer-Encoding: chunked in HTTP/1.1, or HTTP/2 streams), which was explicitly asked for. The prefetching section is just a definition of prefetching, not a contrast: streaming = progressively deliver the current page as async parts resolve; prefetching = speculatively load future pages before the user navigates. Also worth noting: when a Suspense boundary resolves, the streamed chunk includes both the HTML and an inline <script> that swaps the fallback in the DOM.
 ```
 
 ---
