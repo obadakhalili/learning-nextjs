@@ -27,7 +27,7 @@
 | Q16     | Preloading pattern implementation            | 3/5   | graded  |
 | Q17     | useActionState + useFormStatus form          | 3/5   | graded  |
 | Q18     | Route handler + use cache on sub-function    | 4/5   | graded  |
-| Q19     | DAL with verifySession                       | —/5   | pending |
+| Q19     | Parallel slot @preview structure             | 5/5   | graded  |
 | Q20     | ISR + on-demand revalidation                 | —/5   | pending |
 | Q21     | RSC vs SSR (community)                       | —/5   | pending |
 | Q22     | Parallel routes (community)                  | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 10 / 25 — in progress (Q16–Q18 graded)
+**Part 2 (Practice):** 15 / 25 — in progress (Q16–Q19 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 50 / ? — in progress
+**Total:** 55 / ? — in progress
 
 ---
 
@@ -649,13 +649,32 @@ List the files needed and write the implementation for: the layout, the slot's p
 **Your Answer:**
 
 ```
-
+// see src/app/exam-1/editor/
 ```
 
 **Grade & Notes:**
 
 ```
+5/5
 
+Complete and correct. All three requirements satisfied:
+
+File structure:
+  editor/
+    layout.tsx       — receives children + preview (slot prop named after the slot)
+    page.tsx         — main editor content at /editor
+    tab/
+      page.tsx       — sub-route with no @preview branch (tests fallback)
+    @preview/
+      page.tsx       — slot content rendered at /editor
+      default.tsx    — fallback when navigating to a sub-route with no @preview branch
+
+Layout correctly accepts both children and preview as React.ReactNode and renders them
+side by side with flex. The tab/page.tsx sub-route demonstrates when default.tsx fires —
+navigating to /editor/tab has no @preview/tab branch, so default.tsx renders instead.
+That shows understanding of when the fallback actually triggers.
+
+Minor: default.tsx renders "Preview default" — question specified "No preview available".
 ```
 
 ---
