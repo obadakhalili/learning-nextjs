@@ -42,7 +42,7 @@
 | Q31 | Streaming at HTTP level + Suspense        | 3/5   | graded  |
 | Q32 | error.tsx + reset() behavior              | 4/5   | graded  |
 | Q33 | Route Handlers vs Server Actions          | 3/5   | graded  |
-| Q34 | Intercepting routes + canonical rule      | —/5   | pending |
+| Q34 | Intercepting routes + canonical rule      | 2/5   | graded  |
 | Q35 | next/image optimizations                  | —/5   | pending |
 | Q36 | ISR vs PPR trade-off                      | —/5   | pending |
 | Q37 | revalidateTag cache cascade walkthrough   | —/5   | pending |
@@ -1122,13 +1122,14 @@ What are intercepting routes? Explain the interception rule: when does intercept
 **Your Answer:**
 
 ```
-
+- intercepted routes are routes navigated to from another route which has a segment that intercepts them and renders a special component.
+- routes intercepted also have canonical components when the user visits them on initial page load.
 ```
 
 **Grade & Notes:**
 
 ```
-
+2/5. Basic definition is there. The interception rule is incomplete — "initial page load" only covers one hard navigation case; the complete rule is: soft navigation (Link click, router.push) → interception applies; hard navigation (direct URL, refresh, new tab) → canonical wins. The parallel routes pairing pattern is entirely missing despite being explicitly asked: the standard pattern is a @modal parallel slot with an intercepting route for the overlay, default.tsx returns null so no modal shows on hard nav, and the background page stays in {children} while the modal renders in {modal}. Also no mention of the (.) / (..) / (...) notation.
 ```
 
 ---
