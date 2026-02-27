@@ -11,6 +11,8 @@ export default function Exam1Layout({
       <Suspense fallback={<div>Loading...</div>}>
         <Nav />
       </Suspense>
+      <br />
+      <br />
       {children}
     </div>
   );

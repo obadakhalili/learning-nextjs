@@ -33,7 +33,7 @@
 | Q22     | Promise-to-context pattern                   | 4/5   | graded  |
 | Q23     | Intercepted route photo gallery              | 3/5   | graded  |
 | Q24     | Middleware (community)                       | —/5   | pending |
-| Q25     | generateStaticParams (community)             | —/5   | pending |
+| Q25     | addToCart cache cascade + implementation     | 3/5   | graded  |
 | Q26     | Streaming (community)                        | —/5   | pending |
 | Q27     | Error boundaries (community)                 | —/5   | pending |
 | Q28     | Route Handlers vs Server Actions (community) | —/5   | pending |
@@ -53,10 +53,10 @@
 
 **Part 1 (Concept):** 40 / 75 — graded
 **Part 2 (Practice):** 25 / 25 — graded
-**Part 3 (Community):** 3 / 50 — in progress (Q23 graded)
+**Part 3 (Community):** 3 / 50 — in progress (Q23, Q25 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 68 / ? — in progress
+**Total:** 71 / ? — in progress
 
 ---
 
@@ -889,14 +889,38 @@ Walk through what happens in each cache layer (Data Cache, Full Route Cache, Rou
 
 **Your Answer:**
 
-```ts
-
+```
+when user adds item to their cart, server data is updated and cache entry is invalidated using tag, all pages that depends on data mapped to this tag will be invalidated it in full route cache, new rsc payload is sent to client, react reconciles it and displays the new cart page and the router cache takes in the new payload
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+Code is mostly right:
+- getUserCart() uses 'use cache' + cacheTag("user-cart") correctly ✓
+- addToCart uses updateTag("user-cart") — correct choice for read-your-own-writes. updateTag
+  immediately purges (not SWR), so the next request sees fresh data. revalidateTag would leave
+  a window where the user sees their old cart. ✓
+
+Two code gaps:
+1. No redirect() — the question says "immediately after redirect". The action mutates and
+   invalidates but never navigates the user to the cart page.
+2. No cacheLife on getUserCart — no TTL, so the cached result only refreshes via explicit
+   invalidation, never by time. Should have cacheLife('minutes') or similar.
+
+Written walkthrough is too thin — one vague sentence for a question that asks to walk through
+each cache layer specifically. What it should say:
+
+- Data Cache: updateTag("user-cart") immediately purges the Data Cache entry. The next call
+  to getUserCart() re-executes the function and stores a fresh result.
+- Full Route Cache: Any route tagged "user-cart" is also purged. The next request to the
+  cart page triggers a full re-render instead of serving cached HTML.
+- Router Cache: After a Server Action completes, Next.js automatically invalidates the
+  client-side Router Cache for affected routes. The next navigation to /cart fetches a
+  fresh RSC payload rather than serving the stale client-cached one.
+- Request Memoization: Unaffected — scoped to one request, clears automatically each time.
 ```
 
 ---
