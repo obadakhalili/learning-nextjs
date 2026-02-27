@@ -1,4 +1,3 @@
-
 ## Next.js and High Traffic
 
 Prerequisites: caching layers (notes.md), deployment architecture (deployment-architecture.md).
@@ -7,7 +6,7 @@ Prerequisites: caching layers (notes.md), deployment architecture (deployment-ar
 
 ### The core insight
 
-A server rendering the same HTML for 100,000 users is doing the same work 100,000 times. The goal of high-traffic architecture is to do work *once* and reuse the result.
+A server rendering the same HTML for 100,000 users is doing the same work 100,000 times. The goal of high-traffic architecture is to do work _once_ and reuse the result.
 
 Everything in this guide is a variation of that idea.
 
@@ -80,16 +79,16 @@ Coarse tags amplify purge impact:
 
 ```ts
 // bad: one product updates → all product pages become misses simultaneously
-cacheTag('products')
-updateTag('products')
+cacheTag("products");
+updateTag("products");
 ```
 
 Granular tags limit it:
 
 ```ts
 // good: one product updates → only that product's pages become misses
-cacheTag(`product:${id}`)
-updateTag(`product:${id}`)
+cacheTag(`product:${id}`);
+updateTag(`product:${id}`);
 ```
 
 At high traffic, the blast radius of a purge is proportional to how broad your tags are. Per-resource tags mean an invalidation affects one page, not ten thousand.
@@ -108,9 +107,9 @@ Reducing DB calls also helps: `use cache` on DB queries means fewer actual hits:
 
 ```ts
 async function getProducts() {
-  'use cache'
-  cacheLife('hours')
-  return db.query('SELECT * FROM products')
+  "use cache";
+  cacheLife("hours");
+  return db.query("SELECT * FROM products");
 }
 // 1,000 concurrent requests → 1 DB query (first), 999 cache hits
 ```
@@ -130,9 +129,9 @@ Proxy.ts runs at CDN nodes globally, before your origin server. Cheap operations
 ```ts
 // proxy.ts
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('session')
-  if (!token) return NextResponse.redirect(new URL('/login', request.url))
-  return NextResponse.next()
+  const token = request.cookies.get("session");
+  if (!token) return NextResponse.redirect(new URL("/login", request.url));
+  return NextResponse.next();
 }
 ```
 
@@ -142,10 +141,10 @@ Unauthenticated users never reach your origin. At 10,000 bot requests per second
 
 ```ts
 export async function middleware(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') ?? 'anon'
-  const { success } = await ratelimit.limit(ip)  // Upstash Redis (edge-compatible)
-  if (!success) return new NextResponse('Too Many Requests', { status: 429 })
-  return NextResponse.next()
+  const ip = request.headers.get("x-forwarded-for") ?? "anon";
+  const { success } = await ratelimit.limit(ip); // Upstash Redis (edge-compatible)
+  if (!success) return new NextResponse("Too Many Requests", { status: 429 });
+  return NextResponse.next();
 }
 ```
 
@@ -166,24 +165,22 @@ PPR breaks this. The static shell serves from CDN. Only the dynamic holes comput
 
 ```tsx
 export default async function ProductPage({ params }) {
-  const { id } = await params
-  const product = await getProduct(id)  // static — same for everyone
+  const { id } = await params;
+  const product = await getProduct(id); // static — same for everyone
 
   return (
     <article>
-      <h1>{product.name}</h1>           {/* static shell — CDN */}
-      <img src={product.image} />       {/* static shell — CDN */}
-      <p>{product.description}</p>      {/* static shell — CDN */}
-
+      <h1>{product.name}</h1> {/* static shell — CDN */}
+      <img src={product.image} /> {/* static shell — CDN */}
+      <p>{product.description}</p> {/* static shell — CDN */}
       <Suspense fallback={<StockSkeleton />}>
-        <StockAvailability id={id} />   {/* dynamic hole — per request */}
+        <StockAvailability id={id} /> {/* dynamic hole — per request */}
       </Suspense>
-
       <Suspense fallback={<CartSkeleton />}>
-        <CartCount />                   {/* dynamic hole — per user */}
+        <CartCount /> {/* dynamic hole — per user */}
       </Suspense>
     </article>
-  )
+  );
 }
 ```
 

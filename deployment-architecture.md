@@ -1,4 +1,3 @@
-
 ## Next.js Deployment Architecture
 
 ---
@@ -75,10 +74,10 @@ HTTP-based DB clients (Neon, PlanetScale) avoid the problem entirely — each qu
 
 **What "runtime" means:** the environment that executes your JavaScript. Different runtimes expose different APIs.
 
-| Runtime | Available APIs |
-|---|---|
-| Node.js | Everything: `fs`, DB clients, native modules, Web APIs |
-| Browser | DOM, `window`, `fetch`, `localStorage` |
+| Runtime           | Available APIs                                                            |
+| ----------------- | ------------------------------------------------------------------------- |
+| Node.js           | Everything: `fs`, DB clients, native modules, Web APIs                    |
+| Browser           | DOM, `window`, `fetch`, `localStorage`                                    |
 | Edge (V8 Isolate) | Web standard APIs only: `fetch`, `Request`, `Response`, `crypto`, cookies |
 
 The edge runtime is a stripped-down V8 (Chrome's JS engine) with no Node.js built-ins. No Prisma, no Drizzle, no `fs`. Only APIs defined in web standards.
@@ -158,12 +157,12 @@ On self-hosted: the CDN primes on first request. You need to put your own CDN (N
 
 ### Where each cache layer lives per deployment model
 
-| Cache Layer | Vercel | Self-hosted |
-|---|---|---|
-| Request Memoization | Server process memory (same in both — scoped to one request) | Same |
-| Data Cache | Vercel's persistent KV store | `.next/cache` on disk (or Redis adapter) |
-| Full Route Cache | Vercel Edge CDN (global) | `.next/server` on disk |
-| Router Cache | Browser memory (same in both — client-side) | Same |
+| Cache Layer         | Vercel                                                       | Self-hosted                              |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------- |
+| Request Memoization | Server process memory (same in both — scoped to one request) | Same                                     |
+| Data Cache          | Vercel's persistent KV store                                 | `.next/cache` on disk (or Redis adapter) |
+| Full Route Cache    | Vercel Edge CDN (global)                                     | `.next/server` on disk                   |
+| Router Cache        | Browser memory (same in both — client-side)                  | Same                                     |
 
 "Across deployments" for Data Cache on Vercel: Vercel's KV store is separate from your deployment artifact. You deploy new code → KV entries remain. The Data Cache outlives deploys. On self-hosted, `.next/cache` is on disk — if you redeploy by replacing the directory, you lose the cache.
 
@@ -171,13 +170,13 @@ On self-hosted: the CDN primes on first request. You need to put your own CDN (N
 
 ### Deployment model comparison
 
-| | `next start` (self-hosted) | Vercel |
-|---|---|---|
-| Server model | Persistent Node.js process | Serverless functions |
-| DB connection pooling | Not needed (one pool) | Required (many instances) |
-| CDN | Manual setup | Automatic, global |
-| Middleware global distribution | No — runs on your server | Yes — runs at CDN nodes |
-| Cold starts | No | Yes (warm instances mitigate) |
-| Horizontal scaling | Manual (load balancer + multiple instances) | Automatic |
-| Full Route Cache | `.next/` on disk | CDN edge network |
-| Data Cache | `.next/cache` on disk | Vercel KV (persistent across deploys) |
+|                                | `next start` (self-hosted)                  | Vercel                                |
+| ------------------------------ | ------------------------------------------- | ------------------------------------- |
+| Server model                   | Persistent Node.js process                  | Serverless functions                  |
+| DB connection pooling          | Not needed (one pool)                       | Required (many instances)             |
+| CDN                            | Manual setup                                | Automatic, global                     |
+| Middleware global distribution | No — runs on your server                    | Yes — runs at CDN nodes               |
+| Cold starts                    | No                                          | Yes (warm instances mitigate)         |
+| Horizontal scaling             | Manual (load balancer + multiple instances) | Automatic                             |
+| Full Route Cache               | `.next/` on disk                            | CDN edge network                      |
+| Data Cache                     | `.next/cache` on disk                       | Vercel KV (persistent across deploys) |

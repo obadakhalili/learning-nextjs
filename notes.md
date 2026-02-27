@@ -1,15 +1,16 @@
-
 ## What is Next.js?
 
 nextjs is a fullstack typescript framework
 its main feature that it is popular for is flexible rendering strategies (static, ISR, dynamic, PPR) enabling SEO and improving core web vitals, but the framework has more to offer
 such as:
+
 - one project for the FE & BE, which allows for sharing common types and utils
 - file-based routing
 - different caching and optimization techniques enhancing core web vitals, such as FCP, TTI, TTFB
 - calling server functions from the client, blurring the boundary between the FE & BE and removing the need for hand-written API endpoints and contracts
 
 **Rendering strategies:**
+
 - **Static** — route is rendered at build time. Same HTML served to every user. Fastest possible response, fully cacheable. Good for content that doesn't change per-request (marketing pages, docs).
 - **ISR (Incremental Static Regeneration)** — like static, but with a revalidation window. Cached output is served until it goes stale, then regenerated in the background. Good for content that changes occasionally (blog posts, product pages).
 - **Dynamic** — route is rendered at request time. Runs fresh for every user. Required when output depends on request-specific data (cookies, headers, searchParams). No Full Route Cache.
@@ -1184,44 +1185,58 @@ Cache is scoped per request — next request starts fresh.
 
   ```ts
   // DAL — auth primitives
-  export const verifySession = cache(async () => { /* decrypt cookie, redirect if invalid */ })
-  export const getUser = cache(async () => { /* calls verifySession, returns current user */ })
+  export const verifySession = cache(async () => {
+    /* decrypt cookie, redirect if invalid */
+  });
+  export const getUser = cache(async () => {
+    /* calls verifySession, returns current user */
+  });
 
   // DTO — specific getters per context
   export async function getPublicProfileDTO(slug: string) {
-    const user = await db.query.users.findFirst({ where: eq(users.slug, slug) })
-    return { name: user.name }                          // public — no auth needed
+    const user = await db.query.users.findFirst({
+      where: eq(users.slug, slug),
+    });
+    return { name: user.name }; // public — no auth needed
   }
 
   export async function getOwnProfileDTO() {
-    const { userId } = await verifySession()            // DAL: must be logged in
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) })
-    return { name: user.name, email: user.email, phone: user.phone }
+    const { userId } = await verifySession(); // DAL: must be logged in
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    return { name: user.name, email: user.email, phone: user.phone };
   }
 
   export async function getAdminUserDTO(targetId: string) {
-    const currentUser = await getUser()                 // DAL: get current user
-    if (!currentUser.isAdmin) throw new Error('Unauthorized')
-    const user = await db.query.users.findFirst({ where: eq(users.id, targetId) })
-    return { name: user.name, email: user.email, internalNotes: user.internalNotes }
+    const currentUser = await getUser(); // DAL: get current user
+    if (!currentUser.isAdmin) throw new Error("Unauthorized");
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, targetId),
+    });
+    return {
+      name: user.name,
+      email: user.email,
+      internalNotes: user.internalNotes,
+    };
   }
 
   // Pages just call the right getter — no auth logic, no raw rows
-  const profile = await getPublicProfileDTO(slug)
-  const profile = await getOwnProfileDTO()
-  const user    = await getAdminUserDTO(id)
+  const profile = await getPublicProfileDTO(slug);
+  const profile = await getOwnProfileDTO();
+  const user = await getAdminUserDTO(id);
   ```
 
 ## Caching in Next.js
 
 ### The four layers — physical reality
 
-| Layer | Lives in | Survives |
-|---|---|---|
-| Request Memoization | Server process memory | Single request only |
-| Data Cache | Server filesystem / Vercel KV | Across requests + deployments |
-| Full Route Cache | Server filesystem / CDN edge | Across requests + deployments |
-| Router Cache | Browser memory | Current tab session |
+| Layer               | Lives in                      | Survives                      |
+| ------------------- | ----------------------------- | ----------------------------- |
+| Request Memoization | Server process memory         | Single request only           |
+| Data Cache          | Server filesystem / Vercel KV | Across requests + deployments |
+| Full Route Cache    | Server filesystem / CDN edge  | Across requests + deployments |
+| Router Cache        | Browser memory                | Current tab session           |
 
 **On Vercel specifically:** the Full Route Cache (prerendered HTML + RSC payloads) is uploaded as static assets to Vercel's Edge Network during deployment. A user in Berlin requesting `/posts` is served from a Frankfurt CDN node — no origin server involved. The Data Cache is stored in Vercel's persistent KV store, separate from the deployment artifact — new code deploys, KV entries remain. On a self-hosted server, both are just files in `.next/` with no CDN layer unless you set one up.
 
@@ -1234,9 +1249,11 @@ Three things go into it:
 **`fetch` with caching options:**
 
 ```ts
-fetch('https://api.example.com/posts', { cache: 'force-cache' })
-fetch('https://api.example.com/posts', { next: { revalidate: 3600 } })
-fetch(`https://api.example.com/posts/${slug}`, { next: { tags: ['posts', `post-${slug}`] } })
+fetch("https://api.example.com/posts", { cache: "force-cache" });
+fetch("https://api.example.com/posts", { next: { revalidate: 3600 } });
+fetch(`https://api.example.com/posts/${slug}`, {
+  next: { tags: ["posts", `post-${slug}`] },
+});
 ```
 
 In Next.js 15, the default for `fetch` is `no-store` — you must opt in.
@@ -1244,35 +1261,36 @@ In Next.js 15, the default for `fetch` is `no-store` — you must opt in.
 **`unstable_cache` — for non-fetch data (DB queries, computations):**
 
 ```ts
-import { unstable_cache } from 'next/cache'
+import { unstable_cache } from "next/cache";
 
 const getCachedPosts = unstable_cache(
-  async () => db.posts.findMany({ orderBy: { createdAt: 'desc' } }),
-  ['posts-list'],          // keyParts — part of the cache key
-  { revalidate: 3600, tags: ['posts'] }
-)
+  async () => db.posts.findMany({ orderBy: { createdAt: "desc" } }),
+  ["posts-list"], // keyParts — part of the cache key
+  { revalidate: 3600, tags: ["posts"] },
+);
 ```
 
 **`use cache` — newer directive-based API (Next.js 15+):**
 
 ```ts
 async function getCachedPosts() {
-  'use cache'
-  cacheTag('posts')
-  cacheLife('hours')
-  return db.posts.findMany({ orderBy: { createdAt: 'desc' } })
+  "use cache";
+  cacheTag("posts");
+  cacheLife("hours");
+  return db.posts.findMany({ orderBy: { createdAt: "desc" } });
 }
 ```
 
 `unstable_cache` is the older function-wrapper approach. `use cache` is the newer directive (like `'use server'`) — can annotate entire components too, and is the direction the framework is moving. Both populate the same Data Cache.
 
 **`keyParts` vs `tags` in `unstable_cache`:**
+
 - `keyParts` (second arg): determines **which cache entry to look up** — the primary key. Combined with function arguments to form a unique identifier. Prevents key collisions between different functions called with the same arguments.
 - `tags` (options): metadata for **group invalidation**. Don't affect which entry is found — labels stored alongside the entry.
 
 ```ts
-getCachedPost('hello')   // key: hash(['post-detail', 'hello']), tags: ['posts']
-getCachedPost('world')   // key: hash(['post-detail', 'world']), tags: ['posts']
+getCachedPost("hello"); // key: hash(['post-detail', 'hello']), tags: ['posts']
+getCachedPost("world"); // key: hash(['post-detail', 'world']), tags: ['posts']
 // revalidateTag('posts') → hits both entries
 ```
 
@@ -1306,12 +1324,12 @@ For `fetch`, tags go in `next.tags`. For `use cache`, call `cacheTag()` inside t
 
 ```ts
 async function getProducts() {
-  'use cache'
-  cacheTag('products')
-  return db.query('SELECT * FROM products')
+  "use cache";
+  cacheTag("products");
+  return db.query("SELECT * FROM products");
 }
 
-fetch('https://...', { next: { tags: ['products'] } })
+fetch("https://...", { next: { tags: ["products"] } });
 ```
 
 Both are now targetable by `revalidateTag('products')` or `updateTag('products')`.
@@ -1330,8 +1348,8 @@ Populated two ways:
 
 ```ts
 export async function generateStaticParams() {
-  const posts = await db.posts.findMany()
-  return posts.map(p => ({ slug: p.slug }))
+  const posts = await db.posts.findMany();
+  return posts.map((p) => ({ slug: p.slug }));
 }
 // returned paths → pre-rendered at build
 // new paths visited at runtime → rendered once, then cached
@@ -1345,6 +1363,7 @@ export async function generateStaticParams() {
 Lives in browser memory. Stores RSC payloads (not HTML) for routes visited or prefetched in the current tab session.
 
 **Lifecycle:**
+
 - `<Link>` enters viewport → RSC payload prefetched → stored in Router Cache
 - User clicks → Router Cache hit → instant render, no server round-trip
 - Stale time expires → next navigation re-fetches RSC payload from server
@@ -1352,6 +1371,7 @@ Lives in browser memory. Stores RSC payloads (not HTML) for routes visited or pr
 - New tab → Router Cache starts empty
 
 **Stale times in Next.js 15 (configurable):**
+
 - Static routes: 5 minutes (`staleTimes.static = 300`)
 - Dynamic routes: 0 seconds (`staleTimes.dynamic = 0`) — every forward navigation re-fetches
 
@@ -1361,6 +1381,7 @@ Lives in browser memory. Stores RSC payloads (not HTML) for routes visited or pr
 When a `<Link>` to a dynamic route enters the viewport, only the static shell is prefetched (layouts + `loading.tsx` fallback) — not the page content. Running server code (DB queries, etc.) for pages the user may never visit is too expensive. A category page with 30 visible links would mean 30 server renders on prefetch. Static routes are fully prefetched because they're cached files — essentially free. On click for a dynamic route: shell commits instantly (layout + loading skeleton), then dynamic content streams in.
 
 **Router Cache vs Full Route Cache — different populations:**
+
 - Router Cache: this user, this tab, this session. Serves soft navigation.
 - Full Route Cache: everyone else. A different user, this user on hard reload, a new tab, search crawlers.
 
@@ -1373,6 +1394,7 @@ They're complementary. The first-ever visitor to `/posts/new-post` populates the
 Full Route Cache stores rendered output — output built from data. If data changes, output is stale. Next.js enforces this via tag dependency tracking (described above).
 
 **Direction:**
+
 - Data Cache invalidation → Full Route Cache automatically stale (via tag deps)
 - `revalidatePath` → also purges Data Cache deps for that route so re-render fetches fresh data (without this, re-rendering would just re-cache the same stale data)
 - Opting out of Full Route Cache (dynamic rendering) → does NOT affect Data Cache
@@ -1382,7 +1404,7 @@ Full Route Cache stores rendered output — output built from data. If data chan
 **Opting out of Data Cache cascades to Full Route Cache:**
 
 ```ts
-fetch('https://api.example.com/posts', { cache: 'no-store' })
+fetch("https://api.example.com/posts", { cache: "no-store" });
 ```
 
 If data must be fresh per-request, caching the rendered output that depended on it is pointless — the output could differ on every request. Next.js detects `no-store` (or dynamic APIs: `cookies()`, `headers()`, `searchParams`) during rendering and marks the route dynamic — excluded from Full Route Cache entirely. No need to also set `export const dynamic = 'force-dynamic'`. Using `no-store` or calling dynamic APIs is the signal.
@@ -1398,8 +1420,8 @@ Marks entries with that tag as stale. Current (and possibly next) request still 
 ```ts
 // CMS webhook: post published
 export async function POST(req: Request) {
-  await revalidateTag('posts', 'max')   // stale-while-revalidate — no user waiting
-  return Response.json({ ok: true })
+  await revalidateTag("posts", "max"); // stale-while-revalidate — no user waiting
+  return Response.json({ ok: true });
 }
 ```
 
@@ -1411,10 +1433,10 @@ Immediately deletes the cache entry. Next request is a guaranteed miss — fetch
 
 ```ts
 export async function addToCart(itemId: string) {
-  'use server'
-  await db.insertCartItem(itemId)
-  updateTag('cart')       // delete now
-  redirect('/cart')       // this page load hits a miss → sees updated cart
+  "use server";
+  await db.insertCartItem(itemId);
+  updateTag("cart"); // delete now
+  redirect("/cart"); // this page load hits a miss → sees updated cart
 }
 ```
 
@@ -1428,13 +1450,13 @@ Purges Full Route Cache + Data Cache deps for that path. Without also purging Da
 
 ```ts
 export async function deletePost(id: string) {
-  'use server'
-  await db.posts.delete({ where: { id } })
-  revalidatePath('/posts')
+  "use server";
+  await db.posts.delete({ where: { id } });
+  revalidatePath("/posts");
 }
 
-revalidatePath('/posts/[slug]', 'page')   // all /posts/* pages
-revalidatePath('/', 'layout')             // all pages sharing root layout
+revalidatePath("/posts/[slug]", "page"); // all /posts/* pages
+revalidatePath("/", "layout"); // all pages sharing root layout
 ```
 
 #### `refresh()` from `next/cache` / `router.refresh()` — Router Cache only
@@ -1444,17 +1466,17 @@ revalidatePath('/', 'layout')             // all pages sharing root layout
 
 ```ts
 export async function toggleFeatureFlag() {
-  'use server'
-  featureFlags.toggle('new-ui')
-  refresh()  // re-render without busting data cache
+  "use server";
+  featureFlags.toggle("new-ui");
+  refresh(); // re-render without busting data cache
 }
 ```
 
 ```tsx
-'use client'
+"use client";
 export function RefreshButton() {
-  const router = useRouter()
-  return <button onClick={() => router.refresh()}>Refresh</button>
+  const router = useRouter();
+  return <button onClick={() => router.refresh()}>Refresh</button>;
 }
 ```
 
@@ -1463,7 +1485,7 @@ export function RefreshButton() {
 Baked into the fetch. After N seconds, stale-while-revalidate: first request after expiry gets old data but triggers a background refresh.
 
 ```ts
-fetch('https://...', { next: { revalidate: 3600 } })
+fetch("https://...", { next: { revalidate: 3600 } });
 ```
 
 All time-based revalidation uses stale-while-revalidate. Manual operations differ: `revalidatePath` and `updateTag` are immediate purges; `revalidateTag(..., 'max')` is stale-while-revalidate.
@@ -1491,8 +1513,8 @@ Route Handlers are plain HTTP endpoints — the caller might be a cron job, a we
 ```ts
 // Route Handler — clears Data Cache + Full Route Cache only
 export async function POST(req: Request) {
-  revalidatePath('/posts')
-  return Response.json({ ok: true })
+  revalidatePath("/posts");
+  return Response.json({ ok: true });
   // all user browsers: Router Cache unchanged until TTL or hard reload
 }
 ```
@@ -1507,9 +1529,9 @@ RSC payloads in the Router Cache were rendered with a specific auth state. If a 
 
 ```tsx
 export async function logout() {
-  'use server'
-  cookies().delete('auth-token')   // → Router Cache cleared automatically
-  redirect('/login')
+  "use server";
+  cookies().delete("auth-token"); // → Router Cache cleared automatically
+  redirect("/login");
   // without clearing: back-navigation could show the pre-logout "Welcome, Alice" payload
 }
 ```
@@ -1524,17 +1546,17 @@ Request memoization (deduplication within a render pass) only applies inside the
 
 ### Summary: what each operation clears
 
-| Operation | Data Cache | Full Route Cache | Router Cache |
-|---|---|---|---|
-| `revalidateTag` (Server Action) | ✓ stale | ✓ cascade | ✓ |
-| `revalidateTag` (Route Handler) | ✓ stale | ✓ cascade | ✗ |
-| `updateTag` (Server Action only) | ✓ purged | ✓ cascade | ✓ |
-| `revalidatePath` (Server Action) | ✓ purged | ✓ purged | ✓ |
-| `revalidatePath` (Route Handler) | ✓ purged | ✓ purged | ✗ |
-| `refresh()` / `router.refresh()` | ✗ | ✗ | ✓ current route |
-| `cache: 'no-store'` / dynamic APIs | opted out | opted out (dynamic) | — |
-| `cookies().set/delete` (SA) | ✗ | ✗ | ✓ cleared |
-| Hard browser reload | ✗ | ✗ | ✓ wiped |
+| Operation                          | Data Cache | Full Route Cache    | Router Cache    |
+| ---------------------------------- | ---------- | ------------------- | --------------- |
+| `revalidateTag` (Server Action)    | ✓ stale    | ✓ cascade           | ✓               |
+| `revalidateTag` (Route Handler)    | ✓ stale    | ✓ cascade           | ✗               |
+| `updateTag` (Server Action only)   | ✓ purged   | ✓ cascade           | ✓               |
+| `revalidatePath` (Server Action)   | ✓ purged   | ✓ purged            | ✓               |
+| `revalidatePath` (Route Handler)   | ✓ purged   | ✓ purged            | ✗               |
+| `refresh()` / `router.refresh()`   | ✗          | ✗                   | ✓ current route |
+| `cache: 'no-store'` / dynamic APIs | opted out  | opted out (dynamic) | —               |
+| `cookies().set/delete` (SA)        | ✗          | ✗                   | ✓ cleared       |
+| Hard browser reload                | ✗          | ✗                   | ✓ wiped         |
 
 ### When to use which
 
