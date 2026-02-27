@@ -34,7 +34,7 @@
 | Q23 | Intercepted route photo gallery           | 3/5   | graded  |
 | Q24 | PPR dashboard component classification    | 3/5   | graded  |
 | Q25 | addToCart cache cascade + implementation  | 3/5   | graded  |
-| Q26 | RSC vs SSR difference                     | —/5   | pending |
+| Q26 | RSC vs SSR difference                     | 3/5   | graded  |
 | Q27 | Parallel routes use case                  | —/5   | pending |
 | Q28 | ISR stale-while-revalidate                | —/5   | pending |
 | Q29 | Proxy runtime + limitations               | —/5   | pending |
@@ -967,13 +967,14 @@ What is the difference between React Server Components (RSC) and SSR (Server-Sid
 **Your Answer:**
 
 ```
-
+SSR is an idea that means components are rendered on the server first, their html sent to the browser and hydrated there.
+RSC is a protocol proposed by react, the main idea is that the app component tree lives in two module graphs, by default components are server side components and they can be made client components using the "use client" directive. and there are all sorts of rules for how these components interact with each other and standards that make this idea work. RSC uses SSR as part of its many ideas.
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. SSR definition is correct. RSC description gets the dual module graph and "use client" right, but misses the most important architectural detail: RSC produces an RSC Payload (serialized virtual DOM wire format), not HTML — SSR uses that payload to render the initial HTML. RSC components also never re-render on the client at all, unlike SSR where React hydrates and takes over. The two sub-questions ("are they the same?" and "can you have RSC without SSR?") are not answered. To the last one: yes you can — they're orthogonal concepts; RSC is a React feature, SSR is a rendering strategy. Next.js combines them, but you could use RSC with client-side-only rendering.
 ```
 
 ---
