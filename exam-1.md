@@ -28,7 +28,7 @@
 | Q17     | useActionState + useFormStatus form          | 3/5   | graded  |
 | Q18     | Route handler + use cache on sub-function    | 4/5   | graded  |
 | Q19     | Parallel slot @preview structure             | 5/5   | graded  |
-| Q20     | ISR + on-demand revalidation                 | —/5   | pending |
+| Q20     | ActiveLink in static shell fix               | 3/5   | graded  |
 | Q21     | RSC vs SSR (community)                       | —/5   | pending |
 | Q22     | Parallel routes (community)                  | —/5   | pending |
 | Q23     | ISR (community)                              | —/5   | pending |
@@ -52,10 +52,10 @@
 | Q41–Q50 | (see exam)                                   | —     | pending |
 
 **Part 1 (Concept):** 40 / 75 — graded
-**Part 2 (Practice):** 15 / 25 — in progress (Q16–Q19 graded)
+**Part 2 (Practice):** 18 / 25 — in progress (Q16–Q20 graded)
 **Part 3 (Community):** — / 50 — pending
 **Part 4 (Open):** — / 50 — pending
-**Total:** 55 / ? — in progress
+**Total:** 58 / ? — in progress
 
 ---
 
@@ -688,13 +688,29 @@ Explain the problem that arises and implement the fix. Show the relevant layout 
 **Your Answer:**
 
 ```tsx
-
+// see src/app/exam-1/layout.tsx and src/app/exam-1/_components/Nav.tsx
 ```
 
 **Grade & Notes:**
 
 ```
+3/5
 
+The fix is correct: wrapping <Nav /> in <Suspense> makes it a dynamic hole. The layout
+stays in the static shell (serving the fallback), while Nav renders per-request with the
+actual pathname available. That's exactly the right approach.
+
+Missing: no explanation of the problem. The question explicitly asks for it. The problem:
+
+usePathname() reads the current URL, which doesn't exist at build time. During static shell
+prerendering there's no real request, so usePathname() has no pathname to return. The active
+highlight can't be baked into the static HTML — without the fix, all links render as "inactive"
+in the static shell and the correct highlight only appears after client hydration, causing a
+visible flash. The Suspense fix solves this by making Nav a dynamic hole that renders
+per-request on the server, so the correct highlighted state is in the initial HTML.
+
+Minor: <a href> for internal links should be <Link href> from next/link — using <a> triggers
+a hard navigation on every click, losing the Router Cache and all prefetching benefits.
 ```
 
 ---
