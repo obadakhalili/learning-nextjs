@@ -40,7 +40,7 @@
 | Q29 | Proxy runtime + limitations               | 3/5   | graded  |
 | Q30 | generateStaticParams + dynamicParams      | 3/5   | graded  |
 | Q31 | Streaming at HTTP level + Suspense        | 3/5   | graded  |
-| Q32 | error.tsx + reset() behavior              | —/5   | pending |
+| Q32 | error.tsx + reset() behavior              | 4/5   | graded  |
 | Q33 | Route Handlers vs Server Actions          | —/5   | pending |
 | Q34 | Intercepting routes + canonical rule      | —/5   | pending |
 | Q35 | next/image optimizations                  | —/5   | pending |
@@ -1086,13 +1086,13 @@ How do error boundaries work in the App Router? Explain: what `error.tsx` handle
 **Your Answer:**
 
 ```
-
+error boundries wrap every route's page's component. it catches (almost) all thrown errors and sets the internal error state when catches them which display the route's error.tsx component. reset() resets the error boundary component state which renders the children components again, and route changes remount the error boundary resetting its state. it doesn't handle some special errors throw by nextjs as signals, for example the error thrown by `notFound()` method.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. All four asked points are addressed. error.tsx, reset(), and route change behavior are all correct. The "does not handle" section correctly names notFound(), but misses two important cases: redirect() is also a special Next.js signal that bypasses error boundaries, and error.tsx does NOT catch errors thrown in layout.tsx at the same segment level — to catch those you need the parent segment's error.tsx (or global-error.tsx for the root layout).
 ```
 
 ---
