@@ -44,7 +44,7 @@
 | Q33 | Route Handlers vs Server Actions           | 3/5   | graded  |
 | Q34 | Intercepting routes + canonical rule       | 2/5   | graded  |
 | Q35 | next/image optimizations                   | 1/5   | graded  |
-| Q36 | ISR vs PPR trade-off                       | —/5   | pending |
+| Q36 | ISR vs PPR trade-off                       | 4/5   | graded  |
 | Q37 | revalidateTag cache cascade walkthrough    | —/5   | pending |
 | Q38 | Auth gotcha (layout-only protection)       | —/5   | pending |
 | Q39 | loading.tsx not showing debug              | —/5   | pending |
@@ -1165,13 +1165,13 @@ When would you choose ISR over PPR (Partial Prerendering) for a page? Give a sce
 **Your Answer:**
 
 ```
-
+when the page can tolerate some staleness, for example, products listing where products are updated from a separate api. in this case, keeping the products list dynamic just because it changes might be overkill. it is better to cache it and revalidate it on demand or using time based strategy.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Core reasoning is correct (staleness tolerance → ISR), scenario is valid, and ISR strategy (on-demand or time-based) is right. The "why PPR is overkill" part is thin though — it says "keeping it dynamic might be overkill" without explaining what PPR actually does that's unnecessary: PPR is for pages where PART of the content is dynamic while the rest is static, requiring a Suspense boundary split. If the entire page has uniform staleness tolerance, there's no need for that static/dynamic split — ISR caches the whole page uniformly, which is simpler and correct.
 ```
 
 ---
