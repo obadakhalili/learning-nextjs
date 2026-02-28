@@ -45,7 +45,7 @@
 | Q34 | Intercepting routes + canonical rule       | 2/5   | graded  |
 | Q35 | next/image optimizations                   | 1/5   | graded  |
 | Q36 | ISR vs PPR trade-off                       | 4/5   | graded  |
-| Q37 | revalidateTag cache cascade walkthrough    | —/5   | pending |
+| Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded  |
 | Q38 | Auth gotcha (layout-only protection)       | —/5   | pending |
 | Q39 | loading.tsx not showing debug              | —/5   | pending |
 | Q40 | not-found.tsx route vs resource 404        | —/5   | pending |
@@ -1185,13 +1185,18 @@ Now answer the same question but for a `revalidateTag('products')` called from a
 **Your Answer:**
 
 ```
+- data cache: cache entries mapped to this tag become stale and next request will trigger a fresh fetch
+- full route cache: pages that are dependent on this tag are cleared from cache and next request will dynamically render
+- router cache: the page that triggered the server action will be cleared from cache
+- request memoization: no effect
 
+from handler: same thing except for router cache effect
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Structure is correct, Route Handler difference correctly identified (no Router Cache effect), and all four layers addressed. One precision issue: Data Cache — revalidateTag is a purge, not a stale-mark. SWR (serve stale + background regen) applies to time-based revalidation only; revalidateTag immediately invalidates the entry so the next request gets fresh data directly with no stale serving.
 ```
 
 ---
