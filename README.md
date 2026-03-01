@@ -3,6 +3,6 @@
 - when i have an insight or after i've understood something, i ask Claude Code to dump my learning into `./notes/notes.md`
 - it is great because it acts as a thought partner that i can go back and forth with until i reach an understanding, and the notes it writes are customized to my learning style
 - and whenever i want to dive into another concept later in the future, i can have Claude Code read the dumped notes to customzed the explanation to my learning
-- there is also two other toturials in `./notes/deployment-architecture.md` and `./notes/high-traffic.md`
+- there is also other toturials in `./notes/deployment-architecture.md`, `./notes/high-traffic.md`, and `./notes/pages-router.md`
 - additionally, there is an `./notes/exam-1.md` file, which is generated and graded by Claude Code based on my notes and https://github.com/mrhrifat/nextjs-interview-questions
 - there is also a `./notes/revision-1.md` file, which covers the concepts i got wrong in exam-1
