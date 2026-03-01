@@ -50,7 +50,7 @@
 | Q39 | loading.tsx not showing debug              | 4/5   | graded  |
 | Q40 | not-found.tsx route vs resource 404        | 4/5   | graded  |
 | Q41 | use cache dynamic API constraint           | 5/5   | graded  |
-| Q42 | Prefetching deep dive                      | —/5   | pending |
+| Q42 | Prefetching deep dive                      | 4/5   | graded  |
 | Q43 | Flight protocol                            | —/5   | pending |
 | Q44 | useActionState internals                   | —/5   | pending |
 | Q45 | Architecture design (rendering strategies) | —/5   | pending |
@@ -1312,13 +1312,13 @@ You have a page with 30 product links in the viewport. 15 are static routes, 15 
 **Your Answer:**
 
 ```
-
+by default, next will only prefetch static routes. dynamic routes prefetching is avoided to prevent loading the server with a large number of requests that most of which won't be visited. when they click the static routes, they navigate to it instantly because its in the route cache. when they click the dynamic routes, it takes some time to send the request on the server and it resolves. to imrove the ux for the dynamic routes, `cacheComponents` can be enabled which does partial prefetching for dynamic routes by rendering the static shell and leaving the dynamic components until the user makes a request.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Static route prefetching and instant navigation are correct. The cacheComponents/PPR answer is correct. One imprecision: dynamic routes are not entirely skipped — by default Next.js does partial prefetching for them, fetching the shared layout segments up to the first loading.tsx boundary. So on click, the user sees the loading state immediately (not a raw freeze waiting for the server). The difference from static is that the full page isn't prefetched, not that nothing is prefetched.
 ```
 
 ---
