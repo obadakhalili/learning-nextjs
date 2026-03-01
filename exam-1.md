@@ -46,7 +46,7 @@
 | Q35 | next/image optimizations                   | 1/5   | graded  |
 | Q36 | ISR vs PPR trade-off                       | 4/5   | graded  |
 | Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded  |
-| Q38 | Auth gotcha (layout-only protection)       | —/5   | pending |
+| Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded  |
 | Q39 | loading.tsx not showing debug              | —/5   | pending |
 | Q40 | not-found.tsx route vs resource 404        | —/5   | pending |
 | Q41 | React.cache scope isolation                | —/5   | pending |
@@ -1219,13 +1219,14 @@ They believe this makes `/dashboard/**` fully protected. Identify at least two d
 **Your Answer:**
 
 ```
-
+- when DashboardLayout runs for the first time the auth state is captured and layout content is cached and returned. subsequent subpath navigation will serve the same cached dashboard layout so if the user auth state changes it won't be detected.
+- hiding pages content isn't enough, data access functions must be protected too, because the user can make requests against the dashboard route to do various things besides rendering the page.
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. Two valid failure modes identified. Point 1 is slightly imprecisely framed as "caching" — the real mechanism is that layouts don't re-render on client-side navigation within the same segment, so verifySession() simply doesn't run again. Point 2 (DAL protection) is correct. However, the correct approach is entirely missing despite being explicitly asked: the fix is to call verifySession() (wrapped in React.cache for deduplication) inside every data access function so auth is enforced at the data layer regardless of how the data is accessed — not just at the layout level.
 ```
 
 ---
