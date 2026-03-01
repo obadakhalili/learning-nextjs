@@ -58,13 +58,13 @@
 | Q47 | Hydration mismatch                         | 2/5   | graded  |
 | Q48 | pushState vs router.push                   | 4/5   | graded  |
 | Q49 | Server component inside client component   | 4/5   | graded  |
-| Q50 | Static shell mental model                  | —/5   | pending |
+| Q50 | Static shell mental model                  | 4/5   | graded  |
 
 **Part 1 (Concept, Q1–Q15):** 40 / 75 — graded
 **Part 2 (Practice, Q16–Q25):** 34 / 50 — graded
 **Part 3 (Community, Q26–Q35):** 27 / 50 — graded
-**Part 4 (Open, Q36–Q50):** — / 75 — pending
-**Total:** 74 / 250 — in progress
+**Part 4 (Open, Q36–Q50):** 57 / 75   — graded
+**Total:** 158 / 250 — graded
 
 ---
 
@@ -1503,13 +1503,13 @@ With `cacheComponents` enabled, explain what "the static shell" is. What determi
 **Your Answer:**
 
 ```
-
+the static shell is the static parts of a route around a dynamic hole. it can include the layout + loading components. anything that doesn't access data only available at runtime becomes part of the static shell. a server can be a dynamic hole if it access data only available at request time. client component can't be part of static shell because its bundle load on the client
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Three of four sub-questions correct. Static shell definition is right (static parts around Suspense holes, includes layout and loading fallbacks). What determines shell vs hole is right (no runtime data access = shell). Server component as dynamic hole is right (accesses cookies/headers/uncached data = dynamic hole, needs Suspense boundary). The client component answer is wrong: client components CAN be part of the static shell. Their HTML is prerendered and included in the cached shell. The JS bundle loading for hydration is separate — it doesn't exclude the component from the shell. A static nav or button defined in a client file is part of the static shell.
 ```
 
 ---
