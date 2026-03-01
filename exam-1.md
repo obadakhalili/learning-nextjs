@@ -53,7 +53,7 @@
 | Q42 | Prefetching deep dive                      | 4/5   | graded  |
 | Q43 | Flight protocol                            | 4/5   | graded  |
 | Q44 | useActionState internals                   | 4/5   | graded  |
-| Q45 | Architecture design (rendering strategies) | —/5   | pending |
+| Q45 | Architecture design (rendering strategies) | 4/5   | graded  |
 | Q46 | use() vs await                             | —/5   | pending |
 | Q47 | Hydration mismatch                         | —/5   | pending |
 | Q48 | pushState vs router.push                   | —/5   | pending |
@@ -1391,13 +1391,17 @@ For each page, choose a rendering strategy (Static, ISR, Dynamic, PPR) and brief
 **Your Answer:**
 
 ```
-
+- `/`: SSG => all static content, changes detected at build time and cached in full route cacheh
+- `/blog/[slug]`: ISR => can be cached after first request, but a webhook must be defined as route handler to detect updates to blogs and invalidate their cache accordingly. i suggest event-based SWR strategy using `revalidateTag`, not time based, can tolerate serving stale blog posts until fresh one is stored in cache
+- `/app/dashboard`: mostly dynamic and per-user, but can use PRR for static parts
+- `/app/settings`: mostly dynamic and per-user, but can use PRR for static parts
+- `/admin/users`: also per-user because it needs admin authorization to get user list. it can use PPR also, but data can be cached in data cache, though doesn't tolerate SWR and cache must be purged immediatley after update
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Solid architectural decisions across all five pages. The event-based ISR for /blog/[slug] using webhook + revalidateTag is a smart choice over time-based. PPR for dashboard/settings is appropriate. Admin cache with immediate invalidation shows understanding of updateTag vs revalidateTag. Minor issues: SSG description ("changes detected at build time") is imprecise — SSG doesn't detect changes, you need a rebuild; the question asked to specify a revalidation window for ISR choices (a safety-net time window alongside event-based would be complete); "PRR" typo for PPR; admin users is gated by auth but is a shared query, not truly per-user.
 ```
 
 ---
