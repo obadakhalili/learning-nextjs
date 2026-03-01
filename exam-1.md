@@ -57,7 +57,7 @@
 | Q46 | use() vs await                             | 3/5   | graded  |
 | Q47 | Hydration mismatch                         | 2/5   | graded  |
 | Q48 | pushState vs router.push                   | 4/5   | graded  |
-| Q49 | Server component inside client component   | —/5   | pending |
+| Q49 | Server component inside client component   | 4/5   | graded  |
 | Q50 | Static shell mental model                  | —/5   | pending |
 
 **Part 1 (Concept, Q1–Q15):** 40 / 75 — graded
@@ -1485,13 +1485,13 @@ Explain precisely why this breaks the server component, and show the correct pat
 **Your Answer:**
 
 ```
-
+"use client" separates the components between the client module graph and server module graph. that means any import to a file from a file inside the client module graphs makes the file part of the client code as well. if the server component has server only code it will throws errors at rumtime. to render the server component inside the client component and keep it a server component, it must be passed as prop.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. The explanation is correct (importing into a client module pulls the imported file into the client bundle, losing server component behavior). The fix is correctly identified (pass as prop/children). The question explicitly asked to "show" the correct pattern with code, which was not done. The pattern: a server parent (page.tsx) imports both CartModal and CartItems, renders <CartModal><CartItems /></CartModal> — CartItems is rendered in the server graph and its output passed as children to the client component.
 ```
 
 ---
