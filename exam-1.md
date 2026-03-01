@@ -49,7 +49,7 @@
 | Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded  |
 | Q39 | loading.tsx not showing debug              | 4/5   | graded  |
 | Q40 | not-found.tsx route vs resource 404        | 4/5   | graded  |
-| Q41 | React.cache scope isolation                | —/5   | pending |
+| Q41 | use cache dynamic API constraint           | 5/5   | graded  |
 | Q42 | Prefetching deep dive                      | —/5   | pending |
 | Q43 | Flight protocol                            | —/5   | pending |
 | Q44 | useActionState internals                   | —/5   | pending |
@@ -1276,25 +1276,31 @@ but visiting a route that doesn't match any of the paths in the segment tree is 
 
 ---
 
-### Q41 — `React.cache` Scope Isolation
+### Q41 — `use cache` Dynamic API Constraint
 
-`getUser()` is called in two places in the same request:
+The following code causes a build/runtime error:
 
-1. In `layout.tsx` (running in the request scope)
-2. Inside a `use cache`-marked function
+```ts
+async function getUserData(userId: string) {
+  "use cache";
+  const session = cookies().get("session");
+  const user = await db.users.findById(userId);
+  return user;
+}
+```
 
-Do these two calls share memoization? Why or why not? What are the practical implications?
+Explain why `cookies()` cannot be used inside a `use cache` function. What is the architectural reason? How would you restructure this to work correctly?
 
 **Your Answer:**
 
 ```
-
+it calls methods to get data only available at request time, and try to cache the result at the same time. not only this wont work at build time because there is no request, but the result from one request is only applicable to that request due to access to this methods, making it wrong and throwing an error at runtime. the fix is to pass the session-related data to the function.
 ```
 
 **Grade & Notes:**
 
 ```
-
+5/5. Complete answer. Correctly identifies the architectural reason (cookies() provides request-scoped data that can't be part of a deterministic cached result), the build-time issue (no request context at build time), the runtime error (per-request result makes caching wrong), and the correct fix (read cookies() outside the use cache function and pass the relevant data as an argument).
 ```
 
 ---
