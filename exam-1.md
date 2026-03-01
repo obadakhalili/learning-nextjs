@@ -47,7 +47,7 @@
 | Q36 | ISR vs PPR trade-off                       | 4/5   | graded  |
 | Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded  |
 | Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded  |
-| Q39 | loading.tsx not showing debug              | —/5   | pending |
+| Q39 | loading.tsx not showing debug              | 4/5   | graded  |
 | Q40 | not-found.tsx route vs resource 404        | —/5   | pending |
 | Q41 | React.cache scope isolation                | —/5   | pending |
 | Q42 | Prefetching deep dive                      | —/5   | pending |
@@ -1238,13 +1238,13 @@ A user reports: "When I navigate from `/products/1` to `/products/2`, the page j
 **Your Answer:**
 
 ```
-
+when navigating between subroutes of the same url segment, nextjs chooses to show a ui if an existing one is already displayed. so navigating to `/products/any id` shows the loading component because this segment is being rendered for the first time, but changing to a different id will keep the existing ui because there is already something to display to users. to change this behaviour, a template.tsx file can be added, because it wraps the page and loading components and has a key that changes to path change.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Correct diagnosis (same segment stays mounted, existing UI kept) and correct fix (template.tsx). The explanation of why template.tsx works is slightly loose — "key that changes to path change" is an approximation. The precise reason is that template.tsx gets remounted on every navigation (unlike layout.tsx which persists), which forces the children to re-suspend and triggers the Suspense/loading fallback again. Worth noting: loading.tsx wraps content in a Suspense boundary that only triggers its fallback on initial mount — not on updates to an already-mounted tree, which is why same-segment param changes (products/1 → products/2) don't re-trigger it.
 ```
 
 ---
