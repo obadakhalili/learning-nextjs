@@ -54,7 +54,7 @@
 | Q43 | Flight protocol                            | 4/5   | graded  |
 | Q44 | useActionState internals                   | 4/5   | graded  |
 | Q45 | Architecture design (rendering strategies) | 4/5   | graded  |
-| Q46 | use() vs await                             | —/5   | pending |
+| Q46 | use() vs await                             | 3/5   | graded  |
 | Q47 | Hydration mismatch                         | —/5   | pending |
 | Q48 | pushState vs router.push                   | —/5   | pending |
 | Q49 | Server component inside client component   | —/5   | pending |
@@ -1413,13 +1413,13 @@ When is `use(promise)` in a client component preferable to simply `await`-ing in
 **Your Answer:**
 
 ```
-
+mostly usefal when the value is needed in multiple components that getting it to all of them will cause prop drilling to awaiting the promise in each. also, it is more granular than awaiting an entire server component just to pass the result to a part of it that is client component. useful example is passing promise to context component.
 ```
 
 **Grade & Notes:**
 
 ```
-
+3/5. Both scenarios are correctly identified: prop drilling avoidance via Promise-to-context, and fine-grained granularity. But the question asks to explain why await cannot provide the same thing, and that contrast is missing for both. For granularity: await in a server component blocks the entire component's rendering until resolved — by passing the unawaited Promise to a client component instead, the server component renders and streams immediately while only the specific client component calling use() suspends at its own Suspense boundary. For prop drilling: await resolves the value before render, so you'd have to prop-drill the resolved value — you lose the ability to have each consumer suspend independently at its own boundary.
 ```
 
 ---
