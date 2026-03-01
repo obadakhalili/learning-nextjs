@@ -48,7 +48,7 @@
 | Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded  |
 | Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded  |
 | Q39 | loading.tsx not showing debug              | 4/5   | graded  |
-| Q40 | not-found.tsx route vs resource 404        | —/5   | pending |
+| Q40 | not-found.tsx route vs resource 404        | 4/5   | graded  |
 | Q41 | React.cache scope isolation                | —/5   | pending |
 | Q42 | Prefetching deep dive                      | —/5   | pending |
 | Q43 | Flight protocol                            | —/5   | pending |
@@ -1264,13 +1264,14 @@ For each URL below, explain what is rendered and why:
 **Your Answer:**
 
 ```
-
+`not-found.tsx` actually only renderes when a route match and if this route calls `notFound()`. usually this component means resource not found, not the route itself isn't in the segment tree.
+but visiting a route that doesn't match any of the paths in the segment tree is a route not found case and shows the global 404 component.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Correctly distinguishes route 404 vs resource 404: not-found.tsx only renders when a route matches and notFound() is called (resource 404); unmatched routes fall through to the global not-found. These rules directly cover both URLs. Minor missing detail: not-found.tsx is segment-scoped, so app/products/not-found.tsx only catches notFound() calls from within the products segment — a notFound() call elsewhere would use a higher-level not-found.tsx.
 ```
 
 ---
