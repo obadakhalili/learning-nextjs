@@ -51,7 +51,7 @@
 | Q40 | not-found.tsx route vs resource 404        | 4/5   | graded  |
 | Q41 | use cache dynamic API constraint           | 5/5   | graded  |
 | Q42 | Prefetching deep dive                      | 4/5   | graded  |
-| Q43 | Flight protocol                            | —/5   | pending |
+| Q43 | Flight protocol                            | 4/5   | graded  |
 | Q44 | useActionState internals                   | —/5   | pending |
 | Q45 | Architecture design (rendering strategies) | —/5   | pending |
 | Q46 | use() vs await                             | —/5   | pending |
@@ -1330,13 +1330,16 @@ Explain the Flight protocol (React's wire format). What problem does it solve th
 **Your Answer:**
 
 ```
-
+the flight protocol is rsc's own protocol for communication between the client and the server. its used in two important contexts:
+- passing props from server components to client components. props must be serializable, and the flight protocol handle seraliaing values typically not found in json, such as: maps, sets, jsx, and most interestingly promises.
+- seralizing requests and responses for calls to server functions made from inside client components.
+- flight protocol syntax is similar to chunk-based json, which is useful for streaming in nextjs apps when streaming the response in chunks
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. Definition correct, both use contexts correct (server→client props and server action serialization), and 4 non-JSON types named correctly (Maps, Sets, JSX, Promises). The streaming explanation is too thin though — "chunk-based JSON useful for streaming" is the surface. The full picture: Promises in the payload are represented as references (e.g. $L1). As each Promise resolves server-side, its resolved value is sent as a new chunk in the same stream, and the reference resolves to it client-side. This reference-resolution mechanism is what makes progressive rendering work — the client renders immediately with placeholders and fills them in as chunks arrive.
 ```
 
 ---
