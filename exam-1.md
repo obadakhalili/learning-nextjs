@@ -55,7 +55,7 @@
 | Q44 | useActionState internals                   | 4/5   | graded  |
 | Q45 | Architecture design (rendering strategies) | 4/5   | graded  |
 | Q46 | use() vs await                             | 3/5   | graded  |
-| Q47 | Hydration mismatch                         | —/5   | pending |
+| Q47 | Hydration mismatch                         | 2/5   | graded  |
 | Q48 | pushState vs router.push                   | —/5   | pending |
 | Q49 | Server component inside client component   | —/5   | pending |
 | Q50 | Static shell mental model                  | —/5   | pending |
@@ -1431,13 +1431,13 @@ Describe what a React hydration mismatch is at a technical level (what is React 
 **Your Answer:**
 
 ```
-
+hydration mismatch happens when result from react reconcilation using served rsc payload doesn't match the html rendered on the screen. a hydration mismatch error is thrown when that happens. example when this happens: when client component is resolved on client result on initial render different from what shown in the html rendered on the server.
 ```
 
 **Grade & Notes:**
 
 ```
-
+2/5. Definition is vague but directionally right. The question asked for three real-world causes with diagnosis/fix for each — only one vague cause is given with no fix. Three common examples: (1) new Date()/Math.random() in render — server and client produce different values; fix: move to useEffect or suppressHydrationWarning. (2) Browser-only APIs (window, localStorage) used during render — available client-side only; fix: guard with typeof window !== 'undefined' or useEffect. (3) Invalid HTML nesting (e.g. <div> inside <p>) — browser auto-corrects the DOM differently than React expects; fix: correct the markup.
 ```
 
 ---
