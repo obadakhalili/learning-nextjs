@@ -52,7 +52,7 @@
 | Q41 | use cache dynamic API constraint           | 5/5   | graded  |
 | Q42 | Prefetching deep dive                      | 4/5   | graded  |
 | Q43 | Flight protocol                            | 4/5   | graded  |
-| Q44 | useActionState internals                   | —/5   | pending |
+| Q44 | useActionState internals                   | 4/5   | graded  |
 | Q45 | Architecture design (rendering strategies) | —/5   | pending |
 | Q46 | use() vs await                             | —/5   | pending |
 | Q47 | Hydration mismatch                         | —/5   | pending |
@@ -1351,13 +1351,27 @@ Describe the rough internal implementation of `useActionState`. What React primi
 **Your Answer:**
 
 ```
+```js
+function useActionState(action, initState) {
+  const [actionState, setActionState] = useState(initStte)
+  const [actionPending, startTransition] = useTransition()
 
+  const resAction = useCallback((input) => {
+    startTransition(() => {
+      const nextState = await action(actionState, input)
+      setActionState(nextState)
+    })
+  }, [actionState])
+
+  return [actionPending, actionState, resAction]
+}
+```
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. The implementation correctly identifies useState, useTransition, and useCallback as the primitives, passes actionState as the first argument to the action, and correctly places the state update inside an async transition. One factual error: the return order is wrong — useActionState returns [state, action, isPending] but the code returns [pending, state, action]. The text questions ("why prevState?" and "timing?") are only answered through code, not explained. For the record: prevState is passed explicitly because the action runs on the server which has no access to React state, so the current state must be serialized and sent as an argument. The timing: state updates are deferred inside a transition — pending is true during the async call and the UI holds until setActionState fires after the action resolves.
 ```
 
 ---
