@@ -28,7 +28,7 @@ function normalizePath(path: string) {
 }
 
 export default function LabNav() {
-  const pathname = normalizePath(usePathname());
+  const pathname = normalizePath(usePathname() ?? "/lab");
 
   return (
     <nav className="mb-6 flex flex-wrap gap-3 text-sm">

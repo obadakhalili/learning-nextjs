@@ -12,7 +12,7 @@ export function GET(request: NextRequest) {
   });
 }
 
-function getProducts() {
+async function getProducts() {
   "use cache";
   cacheLife({
     revalidate: 60 * 60, // 1 hour

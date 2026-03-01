@@ -36,7 +36,7 @@ export function Nav() {
           <Link
             href={link}
             style={{
-              color: new RegExp(regex).test(res) ? "red" : "black",
+              color: new RegExp(regex).test(res || "") ? "red" : "black",
             }}
           >
             {link}
