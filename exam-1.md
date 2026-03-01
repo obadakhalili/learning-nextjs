@@ -56,7 +56,7 @@
 | Q45 | Architecture design (rendering strategies) | 4/5   | graded  |
 | Q46 | use() vs await                             | 3/5   | graded  |
 | Q47 | Hydration mismatch                         | 2/5   | graded  |
-| Q48 | pushState vs router.push                   | —/5   | pending |
+| Q48 | pushState vs router.push                   | 4/5   | graded  |
 | Q49 | Server component inside client component   | —/5   | pending |
 | Q50 | Static shell mental model                  | —/5   | pending |
 
@@ -1449,13 +1449,15 @@ Explain the difference between calling `window.history.pushState(...)` and `rout
 **Your Answer:**
 
 ```
-
+`pushState` updates the browser history and the current route without causing a request to nextjs. `router.push` does.
+usually used when the url change is needed to reflect client state, no need for sending request to server, example, sorting a list.
+next still tracks browser history for `pushState` calls, so `usePathname` will return the correct url.
 ```
 
 **Grade & Notes:**
 
 ```
-
+4/5. All three points answered correctly. The difference is right (pushState = URL only, no RSC fetch; router.push = full soft navigation). The use case (sorting/filtering client state) is a good concrete example. The hooks integration point is correct but only mentions usePathname — useSearchParams is equally relevant since sorting/filtering state typically lives in search params, and that's the exact hook you'd use in the sorting example given.
 ```
 
 ---
