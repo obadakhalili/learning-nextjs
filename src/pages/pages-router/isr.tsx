@@ -54,18 +54,22 @@ export default function IsrPage({ generatedAt, revalidateSeconds }: Props) {
         <ol style={{ margin: "0.25rem 0 0", paddingLeft: "1.25rem" }}>
           <li>Load this page — note the timestamp below.</li>
           <li>
-            Wait {revalidateSeconds}+ seconds, then refresh. You still see the old timestamp
-            (stale-while-revalidate: you get old data, server regenerates in background).
+            Wait {revalidateSeconds}+ seconds, then refresh. You still see the
+            old timestamp (stale-while-revalidate: you get old data, server
+            regenerates in background).
           </li>
           <li>Refresh again — now you see the new timestamp.</li>
         </ol>
         <p style={{ margin: "0.5rem 0 0" }}>
-          The two-request sequence is the same as App Router time-based revalidation.
+          The two-request sequence is the same as App Router time-based
+          revalidation.
         </p>
       </div>
 
       <h2>Last generated at</h2>
-      <p style={{ fontFamily: "monospace", fontSize: "1.1rem" }}>{generatedAt}</p>
+      <p style={{ fontFamily: "monospace", fontSize: "1.1rem" }}>
+        {generatedAt}
+      </p>
       <p style={{ color: "#666", fontSize: "0.85rem" }}>
         Revalidates every {revalidateSeconds} seconds (stale-while-revalidate).
       </p>
@@ -76,22 +80,34 @@ export default function IsrPage({ generatedAt, revalidateSeconds }: Props) {
       <p style={{ fontSize: "0.85rem" }}>
         You can also trigger regeneration from an API route with{" "}
         <code>res.revalidate(&apos;/pages-router/isr&apos;)</code>. See{" "}
-        <code>src/pages/api/pages-router/products.ts</code> for the API route pattern.
-        In App Router this would be <code>revalidatePath(&apos;/...&apos;)</code> or{" "}
-        <code>revalidateTag(&apos;tag-name&apos;)</code> from a Server Action or Route Handler.
+        <code>src/pages/api/pages-router/products.ts</code> for the API route
+        pattern. In App Router this would be{" "}
+        <code>revalidatePath(&apos;/...&apos;)</code> or{" "}
+        <code>revalidateTag(&apos;tag-name&apos;)</code> from a Server Action or
+        Route Handler.
       </p>
 
       <hr />
 
       <h2>Pages Router ISR vs App Router ISR</h2>
       <table
-        style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.8rem" }}
+        style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          fontSize: "0.8rem",
+        }}
       >
         <thead>
           <tr style={{ background: "#f0f0f0" }}>
-            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>Aspect</th>
-            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>Pages Router</th>
-            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>App Router</th>
+            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>
+              Aspect
+            </th>
+            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>
+              Pages Router
+            </th>
+            <th style={{ padding: "0.4rem 0.5rem", textAlign: "left" }}>
+              App Router
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -114,7 +130,9 @@ export default function IsrPage({ generatedAt, revalidateSeconds }: Props) {
             ],
           ].map(([aspect, pages, app]) => (
             <tr key={aspect}>
-              <td style={{ padding: "0.3rem 0.5rem", fontWeight: "bold" }}>{aspect}</td>
+              <td style={{ padding: "0.3rem 0.5rem", fontWeight: "bold" }}>
+                {aspect}
+              </td>
               <td style={{ padding: "0.3rem 0.5rem" }}>{pages}</td>
               <td style={{ padding: "0.3rem 0.5rem" }}>{app}</td>
             </tr>

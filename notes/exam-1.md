@@ -7,63 +7,63 @@
 
 ## Grading Summary
 
-| Q   | Topic                                      | Score | Status  |
-| --- | ------------------------------------------ | ----- | ------- |
-| Q1  | Two RSC rendering passes                   | 3/5   | graded  |
-| Q2  | layout.tsx vs template.tsx                 | 2/5   | graded  |
-| Q3  | Why params is a Promise                    | 3/5   | graded  |
-| Q4  | 'use client' module boundary               | 2/5   | graded  |
-| Q5  | Four cache layers                          | 3/5   | graded  |
-| Q6  | { cache: 'no-store' } dual effect          | 4/5   | graded  |
-| Q7  | Preloading pattern with React.cache        | 3/5   | graded  |
-| Q8  | revalidateTag vs updateTag                 | 4/5   | graded  |
-| Q9  | self.\_\_next_f.push                       | 2/5   | graded  |
-| Q10 | Soft vs hard navigation                    | 3/5   | graded  |
-| Q11 | Hiding UI is not security                  | 2/5   | graded  |
-| Q12 | cacheComponents flag                       | 3/5   | graded  |
-| Q13 | page.tsx vs default.tsx in slots           | 1/5   | graded  |
-| Q14 | Route Handler / Server Action misuses      | 3/5   | graded  |
-| Q15 | use cache two modes                        | 2/5   | graded  |
-| Q16 | Preloading pattern implementation          | 3/5   | graded  |
-| Q17 | useActionState + useFormStatus form        | 3/5   | graded  |
-| Q18 | Route handler + use cache on sub-function  | 4/5   | graded  |
-| Q19 | Parallel slot @preview structure           | 5/5   | graded  |
-| Q20 | ActiveLink in static shell fix             | 3/5   | graded  |
-| Q21 | DAL + DTO with React.cache                 | 3/5   | graded  |
-| Q22 | Promise-to-context pattern                 | 4/5   | graded  |
-| Q23 | Intercepted route photo gallery            | 3/5   | graded  |
-| Q24 | PPR dashboard component classification     | 3/5   | graded  |
-| Q25 | addToCart cache cascade + implementation   | 3/5   | graded  |
-| Q26 | RSC vs SSR difference                      | 3/5   | graded  |
-| Q27 | Parallel routes use case                   | 2/5   | graded  |
-| Q28 | ISR stale-while-revalidate                 | 3/5   | graded  |
-| Q29 | Proxy runtime + limitations                | 3/5   | graded  |
-| Q30 | generateStaticParams + dynamicParams       | 3/5   | graded  |
-| Q31 | Streaming at HTTP level + Suspense         | 3/5   | graded  |
-| Q32 | error.tsx + reset() behavior               | 4/5   | graded  |
-| Q33 | Route Handlers vs Server Actions           | 3/5   | graded  |
-| Q34 | Intercepting routes + canonical rule       | 2/5   | graded  |
-| Q35 | next/image optimizations                   | 1/5   | graded  |
-| Q36 | ISR vs PPR trade-off                       | 4/5   | graded  |
-| Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded  |
-| Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded  |
-| Q39 | loading.tsx not showing debug              | 4/5   | graded  |
-| Q40 | not-found.tsx route vs resource 404        | 4/5   | graded  |
-| Q41 | use cache dynamic API constraint           | 5/5   | graded  |
-| Q42 | Prefetching deep dive                      | 4/5   | graded  |
-| Q43 | Flight protocol                            | 4/5   | graded  |
-| Q44 | useActionState internals                   | 4/5   | graded  |
-| Q45 | Architecture design (rendering strategies) | 4/5   | graded  |
-| Q46 | use() vs await                             | 3/5   | graded  |
-| Q47 | Hydration mismatch                         | 2/5   | graded  |
-| Q48 | pushState vs router.push                   | 4/5   | graded  |
-| Q49 | Server component inside client component   | 4/5   | graded  |
-| Q50 | Static shell mental model                  | 4/5   | graded  |
+| Q   | Topic                                      | Score | Status |
+| --- | ------------------------------------------ | ----- | ------ |
+| Q1  | Two RSC rendering passes                   | 3/5   | graded |
+| Q2  | layout.tsx vs template.tsx                 | 2/5   | graded |
+| Q3  | Why params is a Promise                    | 3/5   | graded |
+| Q4  | 'use client' module boundary               | 2/5   | graded |
+| Q5  | Four cache layers                          | 3/5   | graded |
+| Q6  | { cache: 'no-store' } dual effect          | 4/5   | graded |
+| Q7  | Preloading pattern with React.cache        | 3/5   | graded |
+| Q8  | revalidateTag vs updateTag                 | 4/5   | graded |
+| Q9  | self.\_\_next_f.push                       | 2/5   | graded |
+| Q10 | Soft vs hard navigation                    | 3/5   | graded |
+| Q11 | Hiding UI is not security                  | 2/5   | graded |
+| Q12 | cacheComponents flag                       | 3/5   | graded |
+| Q13 | page.tsx vs default.tsx in slots           | 1/5   | graded |
+| Q14 | Route Handler / Server Action misuses      | 3/5   | graded |
+| Q15 | use cache two modes                        | 2/5   | graded |
+| Q16 | Preloading pattern implementation          | 3/5   | graded |
+| Q17 | useActionState + useFormStatus form        | 3/5   | graded |
+| Q18 | Route handler + use cache on sub-function  | 4/5   | graded |
+| Q19 | Parallel slot @preview structure           | 5/5   | graded |
+| Q20 | ActiveLink in static shell fix             | 3/5   | graded |
+| Q21 | DAL + DTO with React.cache                 | 3/5   | graded |
+| Q22 | Promise-to-context pattern                 | 4/5   | graded |
+| Q23 | Intercepted route photo gallery            | 3/5   | graded |
+| Q24 | PPR dashboard component classification     | 3/5   | graded |
+| Q25 | addToCart cache cascade + implementation   | 3/5   | graded |
+| Q26 | RSC vs SSR difference                      | 3/5   | graded |
+| Q27 | Parallel routes use case                   | 2/5   | graded |
+| Q28 | ISR stale-while-revalidate                 | 3/5   | graded |
+| Q29 | Proxy runtime + limitations                | 3/5   | graded |
+| Q30 | generateStaticParams + dynamicParams       | 3/5   | graded |
+| Q31 | Streaming at HTTP level + Suspense         | 3/5   | graded |
+| Q32 | error.tsx + reset() behavior               | 4/5   | graded |
+| Q33 | Route Handlers vs Server Actions           | 3/5   | graded |
+| Q34 | Intercepting routes + canonical rule       | 2/5   | graded |
+| Q35 | next/image optimizations                   | 1/5   | graded |
+| Q36 | ISR vs PPR trade-off                       | 4/5   | graded |
+| Q37 | revalidateTag cache cascade walkthrough    | 4/5   | graded |
+| Q38 | Auth gotcha (layout-only protection)       | 3/5   | graded |
+| Q39 | loading.tsx not showing debug              | 4/5   | graded |
+| Q40 | not-found.tsx route vs resource 404        | 4/5   | graded |
+| Q41 | use cache dynamic API constraint           | 5/5   | graded |
+| Q42 | Prefetching deep dive                      | 4/5   | graded |
+| Q43 | Flight protocol                            | 4/5   | graded |
+| Q44 | useActionState internals                   | 4/5   | graded |
+| Q45 | Architecture design (rendering strategies) | 4/5   | graded |
+| Q46 | use() vs await                             | 3/5   | graded |
+| Q47 | Hydration mismatch                         | 2/5   | graded |
+| Q48 | pushState vs router.push                   | 4/5   | graded |
+| Q49 | Server component inside client component   | 4/5   | graded |
+| Q50 | Static shell mental model                  | 4/5   | graded |
 
 **Part 1 (Concept, Q1–Q15):** 40 / 75 — graded
 **Part 2 (Practice, Q16–Q25):** 34 / 50 — graded
 **Part 3 (Community, Q26–Q35):** 27 / 50 — graded
-**Part 4 (Open, Q36–Q50):** 57 / 75   — graded
+**Part 4 (Open, Q36–Q50):** 57 / 75 — graded
 **Total:** 158 / 250 — graded
 
 ---
@@ -1350,7 +1350,7 @@ Describe the rough internal implementation of `useActionState`. What React primi
 
 **Your Answer:**
 
-```
+````
 ```js
 function useActionState(action, initState) {
   const [actionState, setActionState] = useState(initStte)
@@ -1365,13 +1365,16 @@ function useActionState(action, initState) {
 
   return [actionPending, actionState, resAction]
 }
-```
+````
+
 ```
 
 **Grade & Notes:**
 
 ```
+
 4/5. The implementation correctly identifies useState, useTransition, and useCallback as the primitives, passes actionState as the first argument to the action, and correctly places the state update inside an async transition. One factual error: the return order is wrong — useActionState returns [state, action, isPending] but the code returns [pending, state, action]. The text questions ("why prevState?" and "timing?") are only answered through code, not explained. For the record: prevState is passed explicitly because the action runs on the server which has no access to React state, so the current state must be serialized and sent as an argument. The timing: state updates are deferred inside a transition — pending is true during the async call and the UI holds until setActionState fires after the action resolves.
+
 ```
 
 ---
@@ -1391,17 +1394,21 @@ For each page, choose a rendering strategy (Static, ISR, Dynamic, PPR) and brief
 **Your Answer:**
 
 ```
+
 - `/`: SSG => all static content, changes detected at build time and cached in full route cacheh
 - `/blog/[slug]`: ISR => can be cached after first request, but a webhook must be defined as route handler to detect updates to blogs and invalidate their cache accordingly. i suggest event-based SWR strategy using `revalidateTag`, not time based, can tolerate serving stale blog posts until fresh one is stored in cache
 - `/app/dashboard`: mostly dynamic and per-user, but can use PRR for static parts
 - `/app/settings`: mostly dynamic and per-user, but can use PRR for static parts
 - `/admin/users`: also per-user because it needs admin authorization to get user list. it can use PPR also, but data can be cached in data cache, though doesn't tolerate SWR and cache must be purged immediatley after update
+
 ```
 
 **Grade & Notes:**
 
 ```
+
 4/5. Solid architectural decisions across all five pages. The event-based ISR for /blog/[slug] using webhook + revalidateTag is a smart choice over time-based. PPR for dashboard/settings is appropriate. Admin cache with immediate invalidation shows understanding of updateTag vs revalidateTag. Minor issues: SSG description ("changes detected at build time") is imprecise — SSG doesn't detect changes, you need a rebuild; the question asked to specify a revalidation window for ISR choices (a safety-net time window alongside event-based would be complete); "PRR" typo for PPR; admin users is gated by auth but is a shared query, not truly per-user.
+
 ```
 
 ---
@@ -1413,13 +1420,17 @@ When is `use(promise)` in a client component preferable to simply `await`-ing in
 **Your Answer:**
 
 ```
+
 mostly usefal when the value is needed in multiple components that getting it to all of them will cause prop drilling to awaiting the promise in each. also, it is more granular than awaiting an entire server component just to pass the result to a part of it that is client component. useful example is passing promise to context component.
+
 ```
 
 **Grade & Notes:**
 
 ```
+
 3/5. Both scenarios are correctly identified: prop drilling avoidance via Promise-to-context, and fine-grained granularity. But the question asks to explain why await cannot provide the same thing, and that contrast is missing for both. For granularity: await in a server component blocks the entire component's rendering until resolved — by passing the unawaited Promise to a client component instead, the server component renders and streams immediately while only the specific client component calling use() suspends at its own Suspense boundary. For prop drilling: await resolves the value before render, so you'd have to prop-drill the resolved value — you lose the ability to have each consumer suspend independently at its own boundary.
+
 ```
 
 ---
@@ -1431,13 +1442,17 @@ Describe what a React hydration mismatch is at a technical level (what is React 
 **Your Answer:**
 
 ```
+
 hydration mismatch happens when result from react reconcilation using served rsc payload doesn't match the html rendered on the screen. a hydration mismatch error is thrown when that happens. example when this happens: when client component is resolved on client result on initial render different from what shown in the html rendered on the server.
+
 ```
 
 **Grade & Notes:**
 
 ```
+
 2/5. Definition is vague but directionally right. The question asked for three real-world causes with diagnosis/fix for each — only one vague cause is given with no fix. Three common examples: (1) new Date()/Math.random() in render — server and client produce different values; fix: move to useEffect or suppressHydrationWarning. (2) Browser-only APIs (window, localStorage) used during render — available client-side only; fix: guard with typeof window !== 'undefined' or useEffect. (3) Invalid HTML nesting (e.g. <div> inside <p>) — browser auto-corrects the DOM differently than React expects; fix: correct the markup.
+
 ```
 
 ---
@@ -1449,16 +1464,20 @@ Explain the difference between calling `window.history.pushState(...)` and `rout
 **Your Answer:**
 
 ```
+
 `pushState` updates the browser history and the current route without causing a request to nextjs. `router.push` does.
 usually used when the url change is needed to reflect client state, no need for sending request to server, example, sorting a list.
 next still tracks browser history for `pushState` calls, so `usePathname` will return the correct url.
+
 ```
 
 **Grade & Notes:**
 
 ```
+
 4/5. All three points answered correctly. The difference is right (pushState = URL only, no RSC fetch; router.push = full soft navigation). The use case (sorting/filtering client state) is a good concrete example. The hooks integration point is correct but only mentions usePathname — useSearchParams is equally relevant since sorting/filtering state typically lives in search params, and that's the exact hook you'd use in the sorting example given.
-```
+
+````
 
 ---
 
@@ -1478,7 +1497,7 @@ export default function CartModal() {
     </div>
   );
 }
-```
+````
 
 Explain precisely why this breaks the server component, and show the correct pattern to render `CartItems` as a server component while keeping `CartModal` as a client component.
 

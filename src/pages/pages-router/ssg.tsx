@@ -15,9 +15,24 @@ import SectionLayout from "./_components/section-layout";
 // Mock data — in a real app, this would be a DB query or API call.
 // Lives here so we can also use it in getStaticProps without a real DB.
 const PRODUCTS = [
-  { id: 1, name: "Mechanical Keyboard", price: 149, description: "Clicky switches, TKL layout" },
-  { id: 2, name: "USB-C Hub", price: 49, description: "7 ports: USB-A x3, HDMI, SD, PD" },
-  { id: 3, name: "Monitor Stand", price: 89, description: "Ergonomic height/tilt adjustment" },
+  {
+    id: 1,
+    name: "Mechanical Keyboard",
+    price: 149,
+    description: "Clicky switches, TKL layout",
+  },
+  {
+    id: 2,
+    name: "USB-C Hub",
+    price: 49,
+    description: "7 ports: USB-A x3, HDMI, SD, PD",
+  },
+  {
+    id: 3,
+    name: "Monitor Stand",
+    price: 89,
+    description: "Ergonomic height/tilt adjustment",
+  },
 ];
 
 type Product = (typeof PRODUCTS)[number];
@@ -63,12 +78,14 @@ export default function SsgPage({ products, generatedAt }: Props) {
       >
         <strong>How this works:</strong>
         <p style={{ margin: "0.25rem 0 0" }}>
-          <code>getStaticProps</code> ran at <strong>build time</strong>. The HTML you see was
-          pre-generated and is served as a static file. No server code runs on request. This{" "}
-          <code>generatedAt</code> timestamp will be the same for every visitor until the next
-          build:
+          <code>getStaticProps</code> ran at <strong>build time</strong>. The
+          HTML you see was pre-generated and is served as a static file. No
+          server code runs on request. This <code>generatedAt</code> timestamp
+          will be the same for every visitor until the next build:
         </p>
-        <code style={{ display: "block", marginTop: "0.25rem" }}>{generatedAt}</code>
+        <code style={{ display: "block", marginTop: "0.25rem" }}>
+          {generatedAt}
+        </code>
       </div>
 
       <h2>Products</h2>

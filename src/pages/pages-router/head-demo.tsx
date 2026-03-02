@@ -71,14 +71,21 @@ export default function HeadDemoPage({ product }: Props) {
 
         <hr />
 
-        <div style={{ background: "#f5f5f5", padding: "0.75rem", fontSize: "0.8rem" }}>
+        <div
+          style={{
+            background: "#f5f5f5",
+            padding: "0.75rem",
+            fontSize: "0.8rem",
+          }}
+        >
           <strong>What next/head does under the hood:</strong>
           <p style={{ margin: "0.25rem 0 0" }}>
-            During SSR, Next.js collects everything rendered inside any <code>&lt;Head&gt;</code>{" "}
-            component in the tree, deduplicates them (later wins for same tag/name), and injects
-            them into the HTML <code>&lt;head&gt;</code>. On the client, React re-runs this
-            collection during hydration and uses a portal to keep the real DOM <code>&lt;head&gt;</code>{" "}
-            in sync with the virtual tree.
+            During SSR, Next.js collects everything rendered inside any{" "}
+            <code>&lt;Head&gt;</code> component in the tree, deduplicates them
+            (later wins for same tag/name), and injects them into the HTML{" "}
+            <code>&lt;head&gt;</code>. On the client, React re-runs this
+            collection during hydration and uses a portal to keep the real DOM{" "}
+            <code>&lt;head&gt;</code> in sync with the virtual tree.
           </p>
         </div>
 
@@ -117,9 +124,10 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 }`}
           </pre>
           <p>
-            App Router metadata is a data contract — you declare what the metadata is, Next.js
-            handles rendering it. Pages Router <code>next/head</code> is imperative — you render
-            the tags directly as JSX.
+            App Router metadata is a data contract — you declare what the
+            metadata is, Next.js handles rendering it. Pages Router{" "}
+            <code>next/head</code> is imperative — you render the tags directly
+            as JSX.
           </p>
         </div>
       </div>

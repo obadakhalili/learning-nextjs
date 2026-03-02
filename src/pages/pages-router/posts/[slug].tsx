@@ -72,8 +72,9 @@ export default function PostPage({ post, generatedAt }: Props) {
       <div>
         <p>Generating page...</p>
         <p style={{ fontSize: "0.8rem", color: "#888" }}>
-          (This loading state only appears with <code>fallback: true</code>. With{" "}
-          <code>fallback: &apos;blocking&apos;</code>, the server waits before responding.)
+          (This loading state only appears with <code>fallback: true</code>.
+          With <code>fallback: &apos;blocking&apos;</code>, the server waits
+          before responding.)
         </p>
       </div>
     );
@@ -84,15 +85,24 @@ export default function PostPage({ post, generatedAt }: Props) {
       <Link href="/pages-router/posts">← Back to posts</Link>
 
       <h1 style={{ marginTop: "1rem" }}>{post.title}</h1>
-      <p style={{ color: "#888", fontSize: "0.85rem" }}>Published: {post.date}</p>
+      <p style={{ color: "#888", fontSize: "0.85rem" }}>
+        Published: {post.date}
+      </p>
       <p>{post.summary}</p>
 
       <hr />
 
-      <div style={{ background: "#f5f5f5", padding: "0.75rem", fontSize: "0.8rem" }}>
+      <div
+        style={{
+          background: "#f5f5f5",
+          padding: "0.75rem",
+          fontSize: "0.8rem",
+        }}
+      >
         <strong>getStaticPaths internals</strong>
         <p style={{ margin: "0.25rem 0 0" }}>
-          This page was statically generated for slug: <code>{router.query.slug}</code>
+          This page was statically generated for slug:{" "}
+          <code>{router.query.slug}</code>
           <br />
           Generated at: <code>{generatedAt}</code>
           <br />
@@ -100,10 +110,11 @@ export default function PostPage({ post, generatedAt }: Props) {
         </p>
         <p style={{ marginTop: "0.5rem" }}>
           The three slugs returned by <code>getStaticPaths</code> (
-          <code>understanding-rsc</code>, <code>pages-vs-app</code>, <code>isr-deep-dive</code>)
-          were pre-rendered at build time. Any other slug (e.g.{" "}
-          <code>/pages-router/posts/nonexistent</code>) hits <code>fallback: &apos;blocking&apos;</code>
-          — the server tries to generate it, <code>getStaticProps</code> returns{" "}
+          <code>understanding-rsc</code>, <code>pages-vs-app</code>,{" "}
+          <code>isr-deep-dive</code>) were pre-rendered at build time. Any other
+          slug (e.g. <code>/pages-router/posts/nonexistent</code>) hits{" "}
+          <code>fallback: &apos;blocking&apos;</code>— the server tries to
+          generate it, <code>getStaticProps</code> returns{" "}
           <code>notFound: true</code>, and the 404 page is shown.
         </p>
       </div>

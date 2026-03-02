@@ -28,9 +28,10 @@ export default function PagesRouterIndex({ builtAt }: Props) {
         This page was statically generated at: {builtAt}
       </p>
       <p>
-        This is the Pages Router — the older Next.js routing system. All examples here live in{" "}
-        <code>src/pages/pages-router/</code>. Explore each demo to understand how Pages Router
-        handles rendering, data fetching, and routing differently from the App Router.
+        This is the Pages Router — the older Next.js routing system. All
+        examples here live in <code>src/pages/pages-router/</code>. Explore each
+        demo to understand how Pages Router handles rendering, data fetching,
+        and routing differently from the App Router.
       </p>
       <ul>
         <li>

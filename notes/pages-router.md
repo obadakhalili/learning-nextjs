@@ -55,14 +55,16 @@ pages/blog/[[...slug]].tsx     → /blog/* + /blog (optional catch-all)
 ```
 
 Special files:
-- `pages/_app.tsx`      — global wrapper for all pages (like root layout, but client-side)
+
+- `pages/_app.tsx` — global wrapper for all pages (like root layout, but client-side)
 - `pages/_document.tsx` — HTML shell customization (like `<html>` and `<body>` in root layout)
-- `pages/404.tsx`       — custom 404 page
-- `pages/500.tsx`       — custom 500 page
-- `pages/_error.tsx`    — fallback for errors without a specific page
+- `pages/404.tsx` — custom 404 page
+- `pages/500.tsx` — custom 500 page
+- `pages/_error.tsx` — fallback for errors without a specific page
 
 API routes live in `pages/api/`:
-- `pages/api/hello.ts`  → `/api/hello`
+
+- `pages/api/hello.ts` → `/api/hello`
 
 When you have both `app/` and `pages/` in the same Next.js project, they coexist. Routes in
 `pages/` go through the Pages Router. Routes in `app/` go through the App Router. The root
@@ -79,7 +81,7 @@ component. The page is rendered to static HTML during the build.
 
 ```ts
 // pages/pages-router/ssg.tsx
-import type { GetStaticProps } from 'next';
+import type { GetStaticProps } from "next";
 
 type Props = { product: { id: number; name: string; price: number } };
 
@@ -95,7 +97,7 @@ export const getStaticProps: GetStaticProps<Props> = async (context) => {
     props: {
       product: JSON.parse(JSON.stringify(product)), // MUST be JSON-serializable
     },
-    revalidate: 3600,  // optional: regenerate this page after 1 hour (ISR)
+    revalidate: 3600, // optional: regenerate this page after 1 hour (ISR)
     // notFound: true  — renders 404 instead
     // redirect: { destination: '/other', permanent: false }
   };
@@ -124,18 +126,18 @@ rendered fresh on every request.
 
 ```ts
 // pages/pages-router/ssr.tsx
-import type { GetServerSideProps } from 'next';
+import type { GetServerSideProps } from "next";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req, res, params, query, resolvedUrl, locale } = context;
 
   // req is Node.js IncomingMessage (not Web Request)
-  const token = req.cookies['auth-token'];  // cookies via req.cookies
-  const ua = req.headers['user-agent'];     // headers via req.headers
+  const token = req.cookies["auth-token"]; // cookies via req.cookies
+  const ua = req.headers["user-agent"]; // headers via req.headers
 
   if (!token) {
     return {
-      redirect: { destination: '/login', permanent: false },
+      redirect: { destination: "/login", permanent: false },
     };
   }
 
@@ -143,7 +145,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const data = await db.getUserData(user.id);
 
   // Can set response headers
-  res.setHeader('Cache-Control', 'private, max-age=0');
+  res.setHeader("Cache-Control", "private, max-age=0");
 
   return {
     props: {
@@ -174,14 +176,14 @@ which paths to pre-render at build time, and what to do with paths not in that l
 
 ```ts
 // pages/pages-router/posts/[slug].tsx
-import type { GetStaticPaths, GetStaticProps } from 'next';
+import type { GetStaticPaths, GetStaticProps } from "next";
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await db.posts.findMany({ select: { slug: true } });
 
   return {
     paths: posts.map((p) => ({ params: { slug: p.slug } })),
-    fallback: 'blocking', // or false, or true
+    fallback: "blocking", // or false, or true
   };
 };
 
@@ -199,11 +201,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 The `fallback` option is the key decision, and it maps directly to App Router concepts:
 
-| `fallback` value  | Behavior                                               | App Router equivalent       |
-| ----------------- | ------------------------------------------------------ | --------------------------- |
-| `false`           | Unlisted paths → 404. No on-demand generation.         | `dynamicParams = false`     |
-| `'blocking'`      | Unlisted paths → SSR-like wait, then cache statically. | Default (`dynamicParams = true`) |
-| `true`            | Unlisted paths → render immediately with `isFallback`, generate in background. | No direct equivalent |
+| `fallback` value | Behavior                                                                       | App Router equivalent            |
+| ---------------- | ------------------------------------------------------------------------------ | -------------------------------- |
+| `false`          | Unlisted paths → 404. No on-demand generation.                                 | `dynamicParams = false`          |
+| `'blocking'`     | Unlisted paths → SSR-like wait, then cache statically.                         | Default (`dynamicParams = true`) |
+| `true`           | Unlisted paths → render immediately with `isFallback`, generate in background. | No direct equivalent             |
 
 `fallback: true` is a unique Pages Router concept. The component renders immediately on the client
 with empty props (`post` will be `undefined`). Meanwhile, the server generates the static page.
@@ -235,8 +237,8 @@ re-fetches once the static file is ready.
 
 ```tsx
 // pages/_app.tsx
-import type { AppProps } from 'next/app';
-import '../styles/globals.css'; // global CSS imports go here
+import type { AppProps } from "next/app";
+import "../styles/globals.css"; // global CSS imports go here
 
 export default function App({ Component, pageProps }: AppProps) {
   // Component = the current page component being rendered
@@ -253,6 +255,7 @@ export default function App({ Component, pageProps }: AppProps) {
 ```
 
 `_app.tsx` wraps every page. It runs on both server (SSR) and client (hydration), which means:
+
 - You can import global CSS here (only place allowed for global, non-module CSS)
 - You can mount providers (theme, auth, query clients)
 - You **cannot** use Node.js APIs — this code runs in the browser too
@@ -311,7 +314,7 @@ This is manual wiring. The framework knows nothing about it. A few consequences:
 
 ```tsx
 // pages/_document.tsx
-import { Html, Head, Main, NextScript } from 'next/document';
+import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
@@ -322,8 +325,9 @@ export default function Document() {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </Head>
       <body>
-        <Main />       {/* page content renders here */}
-        <NextScript /> {/* Next.js scripts: RSC payload, hydration scripts, etc. */}
+        <Main /> {/* page content renders here */}
+        <NextScript />{" "}
+        {/* Next.js scripts: RSC payload, hydration scripts, etc. */}
       </body>
     </Html>
   );
@@ -331,6 +335,7 @@ export default function Document() {
 ```
 
 Key rules:
+
 - Runs on server only. Never hydrated. **Cannot use hooks.**
 - `<Html>`, `<Head>`, `<Main>`, `<NextScript>` are Next.js components — they must appear exactly
   as shown. Do not nest `<Main />` inside extra wrappers.
@@ -348,7 +353,7 @@ goes in `export const metadata` or `generateMetadata()`.
 
 ```ts
 // pages/api/pages-router/products.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from "next";
 
 type Product = { id: number; name: string; price: number };
 type ErrorResponse = { error: string };
@@ -357,37 +362,37 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Product[] | Product | ErrorResponse>,
 ) {
-  if (req.method === 'GET') {
+  if (req.method === "GET") {
     const products = await db.products.findMany();
     return res.status(200).json(products);
   }
 
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     const { name, price } = req.body; // body auto-parsed for JSON (Content-Type: application/json)
     if (!name || price == null) {
-      return res.status(400).json({ error: 'name and price are required' });
+      return res.status(400).json({ error: "name and price are required" });
     }
     const product = await db.products.create({ data: { name, price } });
     return res.status(201).json(product);
   }
 
-  res.setHeader('Allow', ['GET', 'POST']);
+  res.setHeader("Allow", ["GET", "POST"]);
   return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
 ```
 
 Compare to App Router Route Handlers:
 
-| Aspect                  | Pages Router API Route                       | App Router Route Handler                    |
-| ----------------------- | -------------------------------------------- | ------------------------------------------- |
-| File location           | `pages/api/products.ts`                      | `app/api/products/route.ts`                 |
-| Export                  | `export default handler(req, res)`           | `export async function GET(req)`, `POST`, … |
-| Request type            | `NextApiRequest` (Node.js IncomingMessage)   | `Request` (Web Fetch API)                   |
-| Response                | `res.status(200).json(data)`                 | `return Response.json(data)`                |
-| Body parsing            | `req.body` (auto-parsed)                     | `await req.json()`, `await req.text()`      |
-| Query params            | `req.query`                                  | `new URL(req.url).searchParams`             |
-| Cookies                 | `req.cookies`                                | `cookies()` from `next/headers`             |
-| Static caching          | `export const config = { api: { ... } }`     | `export const dynamic = 'force-static'`     |
+| Aspect         | Pages Router API Route                     | App Router Route Handler                    |
+| -------------- | ------------------------------------------ | ------------------------------------------- |
+| File location  | `pages/api/products.ts`                    | `app/api/products/route.ts`                 |
+| Export         | `export default handler(req, res)`         | `export async function GET(req)`, `POST`, … |
+| Request type   | `NextApiRequest` (Node.js IncomingMessage) | `Request` (Web Fetch API)                   |
+| Response       | `res.status(200).json(data)`               | `return Response.json(data)`                |
+| Body parsing   | `req.body` (auto-parsed)                   | `await req.json()`, `await req.text()`      |
+| Query params   | `req.query`                                | `new URL(req.url).searchParams`             |
+| Cookies        | `req.cookies`                              | `cookies()` from `next/headers`             |
+| Static caching | `export const config = { api: { ... } }`   | `export const dynamic = 'force-static'`     |
 
 One default export, switch on `req.method` — that's the Pages Router way. You cannot call a Pages
 Router API route from a Server Component (same reason as App Router Route Handlers: it's an
@@ -404,7 +409,7 @@ Next.js places those values in the HTML `<head>`. In the Pages Router, `<Head>` 
 
 ```tsx
 // pages/pages-router/head-demo.tsx
-import Head from 'next/head';
+import Head from "next/head";
 
 export default function HeadDemoPage({ product }) {
   return (
@@ -414,7 +419,10 @@ export default function HeadDemoPage({ product }) {
         <meta name="description" content={product.description} />
         <meta property="og:title" content={product.name} />
         <meta property="og:image" content={product.imageUrl} />
-        <link rel="canonical" href={`https://mystore.com/products/${product.slug}`} />
+        <link
+          rel="canonical"
+          href={`https://mystore.com/products/${product.slug}`}
+        />
       </Head>
       <main>
         <h1>{product.name}</h1>
@@ -430,6 +438,7 @@ layout components, from the page itself), they get merged. Later-rendered `<titl
 earlier ones (inner wins over outer).
 
 The split between `_document.tsx` `<Head>` and `next/head`:
+
 - `_document.tsx` `<Head>`: global, static stuff — font preconnects, viewport meta
 - `next/head` inside page components: page-specific stuff — title, description, OG tags, canonical
 
@@ -443,7 +452,7 @@ In the App Router, navigation concerns are split into separate hooks (`useRouter
 `useSearchParams`, `usePathname`). In the Pages Router, `useRouter()` does everything:
 
 ```tsx
-import { useRouter } from 'next/router'; // NOT 'next/navigation' — different package
+import { useRouter } from "next/router"; // NOT 'next/navigation' — different package
 
 export default function Page() {
   const router = useRouter();
@@ -454,21 +463,26 @@ export default function Page() {
   // router.isReady  — false on first render when router.query isn't populated yet
 
   // Programmatic navigation
-  router.push('/about');
-  router.push({ pathname: '/pages-router/posts/[slug]', query: { slug: 'hello' } });
-  router.replace('/new-url');
+  router.push("/about");
+  router.push({
+    pathname: "/pages-router/posts/[slug]",
+    query: { slug: "hello" },
+  });
+  router.replace("/new-url");
   router.back();
 
   // Shallow routing — update URL without triggering data refetch
-  router.push('/page?tab=2', undefined, { shallow: true });
+  router.push("/page?tab=2", undefined, { shallow: true });
 }
 ```
 
 **`router.query` mixing params and query strings** is a Pages Router quirk. If your route file
 is `pages/posts/[slug].tsx` and the URL is `/posts/hello?tab=comments`, then:
+
 ```
 router.query = { slug: 'hello', tab: 'comments' }
 ```
+
 Both dynamic segment params and query string params live in the same object. App Router keeps them
 completely separate (`params` via `useParams()` vs `searchParams` via `useSearchParams()`).
 
@@ -495,7 +509,7 @@ where you want the URL to be bookmarkable but don't need a server round-trip.
 
 ```tsx
 // User selects a tab — update URL but don't re-run server data fetching
-router.push('/products?tab=reviews', undefined, { shallow: true });
+router.push("/products?tab=reviews", undefined, { shallow: true });
 ```
 
 App Router equivalent: `window.history.pushState(null, '', '/products?tab=reviews')`, which Next.js
@@ -534,14 +548,14 @@ build time:           page pre-rendered, HTML stored
 // pages/api/revalidate.ts
 export default async function handler(req, res) {
   if (req.query.secret !== process.env.REVALIDATION_SECRET) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: "Invalid token" });
   }
 
   try {
-    await res.revalidate('/pages-router/isr'); // path to invalidate
+    await res.revalidate("/pages-router/isr"); // path to invalidate
     return res.json({ revalidated: true });
   } catch (err) {
-    return res.status(500).json({ error: 'Revalidation failed' });
+    return res.status(500).json({ error: "Revalidation failed" });
   }
 }
 ```
@@ -561,10 +575,10 @@ Router, since every component is a "client component," `next/dynamic` serves two
 **1. Code splitting (lazy loading):**
 
 ```tsx
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
 // Only loads the bundle for HeavyChart when it's actually rendered
-const HeavyChart = dynamic(() => import('../components/HeavyChart'));
+const HeavyChart = dynamic(() => import("../components/HeavyChart"));
 ```
 
 This is equivalent to `React.lazy` with `<Suspense>`. The component's JavaScript isn't in the
@@ -574,7 +588,7 @@ initial page bundle.
 
 ```tsx
 // Map component uses window.navigator — crashes if SSR'd
-const MapComponent = dynamic(() => import('../components/Map'), { ssr: false });
+const MapComponent = dynamic(() => import("../components/Map"), { ssr: false });
 ```
 
 With `ssr: false`, Next.js renders nothing for this component on the server (outputs nothing in
@@ -588,7 +602,7 @@ with `{ ssr: false }` still works in App Router for the same purpose if needed.
 **With a loading state:**
 
 ```tsx
-const HeavyEditor = dynamic(() => import('../components/Editor'), {
+const HeavyEditor = dynamic(() => import("../components/Editor"), {
   loading: () => <p>Loading editor...</p>,
   ssr: false,
 });
@@ -627,14 +641,14 @@ runtime errors not caught by React error boundaries. Uses `getInitialProps` (the
 fetching API):
 
 ```tsx
-import { NextPageContext } from 'next';
+import { NextPageContext } from "next";
 
 function ErrorPage({ statusCode }: { statusCode: number }) {
   return (
     <p>
       {statusCode
         ? `An error ${statusCode} occurred on the server`
-        : 'An error occurred on the client'}
+        : "An error occurred on the client"}
     </p>
   );
 }
@@ -648,6 +662,7 @@ export default ErrorPage;
 ```
 
 Compare to App Router:
+
 - App Router's `not-found.tsx` is for "route matched, resource missing" — per-segment, not global
 - App Router's `error.tsx` catches render errors per-segment, has `reset()` for retry
 - Pages Router `_error.tsx` is global — one catch-all for the entire app
@@ -697,9 +712,9 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 
   try {
     const formData = new FormData(e.currentTarget);
-    const res = await fetch('/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(formData)),
     });
 
@@ -709,9 +724,9 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
       return;
     }
 
-    router.push('/posts');
+    router.push("/posts");
   } catch (err) {
-    setError('Something went wrong');
+    setError("Something went wrong");
   } finally {
     setIsPending(false);
   }
@@ -744,16 +759,16 @@ as a JSON block:
 
 ```html
 <script id="__NEXT_DATA__" type="application/json">
-{
-  "props": {
-    "pageProps": {
-      "product": { "id": 1, "name": "Keyboard", "price": 149 }
-    }
-  },
-  "page": "/pages-router/ssg",
-  "query": {},
-  "buildId": "abc123"
-}
+  {
+    "props": {
+      "pageProps": {
+        "product": { "id": 1, "name": "Keyboard", "price": 149 }
+      }
+    },
+    "page": "/pages-router/ssg",
+    "query": {},
+    "buildId": "abc123"
+  }
 </script>
 ```
 
@@ -797,6 +812,7 @@ MyPage.getInitialProps = async (ctx) => {
 ```
 
 This dual execution context is why `getInitialProps` is confusing and was superseded:
+
 - `getServerSideProps` = always server only → safe to use Node.js APIs, DB calls
 - `getStaticProps` = always build time on server → same safety
 
@@ -807,33 +823,33 @@ special files need data both during SSR and during client-side error recovery. A
 
 ## 14. Quick reference: App Router → Pages Router mapping
 
-| App Router                               | Pages Router equivalent                            |
-| ---------------------------------------- | -------------------------------------------------- |
-| `app/page.tsx`                           | `pages/index.tsx` (etc.)                           |
-| `app/layout.tsx`                         | `pages/_app.tsx` + `.layout` convention            |
-| `app/[slug]/page.tsx`                    | `pages/[slug].tsx`                                 |
-| `export const metadata`                  | `<Head>` from `next/head`                          |
-| `generateMetadata()`                     | `<Head>` with dynamic values from props            |
-| `generateStaticParams()`                 | `getStaticPaths()`                                 |
-| `dynamicParams = false`                  | `fallback: false` in `getStaticPaths`              |
-| async server component (static)          | `getStaticProps`                                   |
-| async server component (dynamic)         | `getServerSideProps`                               |
-| `notFound()` from `next/navigation`      | `return { notFound: true }` from data fetch fn     |
-| `redirect()` from `next/navigation`      | `return { redirect: {...} }` from data fetch fn    |
-| `app/api/route.ts` (Route Handler)       | `pages/api/handler.ts` (API Route)                 |
-| `'use server'` / Server Actions          | Manual `fetch('/api/...')` + useState              |
-| `useRouter` from `next/navigation`       | `useRouter` from `next/router`                     |
-| `useParams()`                            | `router.query` (mixed with search params)          |
-| `useSearchParams()`                      | `router.query` (mixed with route params)           |
-| `cookies()` / `headers()`               | `req.cookies` / `req.headers` in getServerSideProps|
-| `error.tsx`                              | Manual React error boundary OR `pages/_error.tsx`  |
-| `not-found.tsx`                          | `pages/404.tsx` + `return { notFound: true }`      |
-| `loading.tsx`                            | `next/dynamic` loading or manual `useState`        |
-| Streaming / Suspense                     | **Does not exist**                                 |
-| Server Actions / `'use server'`          | **Does not exist**                                 |
-| `use cache` / Data Cache tags            | **Does not exist** — `revalidate: N` only          |
-| PPR / Partial Prerendering               | **Does not exist**                                 |
-| Parallel routes / Intercepting routes    | **Does not exist**                                 |
+| App Router                            | Pages Router equivalent                             |
+| ------------------------------------- | --------------------------------------------------- |
+| `app/page.tsx`                        | `pages/index.tsx` (etc.)                            |
+| `app/layout.tsx`                      | `pages/_app.tsx` + `.layout` convention             |
+| `app/[slug]/page.tsx`                 | `pages/[slug].tsx`                                  |
+| `export const metadata`               | `<Head>` from `next/head`                           |
+| `generateMetadata()`                  | `<Head>` with dynamic values from props             |
+| `generateStaticParams()`              | `getStaticPaths()`                                  |
+| `dynamicParams = false`               | `fallback: false` in `getStaticPaths`               |
+| async server component (static)       | `getStaticProps`                                    |
+| async server component (dynamic)      | `getServerSideProps`                                |
+| `notFound()` from `next/navigation`   | `return { notFound: true }` from data fetch fn      |
+| `redirect()` from `next/navigation`   | `return { redirect: {...} }` from data fetch fn     |
+| `app/api/route.ts` (Route Handler)    | `pages/api/handler.ts` (API Route)                  |
+| `'use server'` / Server Actions       | Manual `fetch('/api/...')` + useState               |
+| `useRouter` from `next/navigation`    | `useRouter` from `next/router`                      |
+| `useParams()`                         | `router.query` (mixed with search params)           |
+| `useSearchParams()`                   | `router.query` (mixed with route params)            |
+| `cookies()` / `headers()`             | `req.cookies` / `req.headers` in getServerSideProps |
+| `error.tsx`                           | Manual React error boundary OR `pages/_error.tsx`   |
+| `not-found.tsx`                       | `pages/404.tsx` + `return { notFound: true }`       |
+| `loading.tsx`                         | `next/dynamic` loading or manual `useState`         |
+| Streaming / Suspense                  | **Does not exist**                                  |
+| Server Actions / `'use server'`       | **Does not exist**                                  |
+| `use cache` / Data Cache tags         | **Does not exist** — `revalidate: N` only           |
+| PPR / Partial Prerendering            | **Does not exist**                                  |
+| Parallel routes / Intercepting routes | **Does not exist**                                  |
 
 ---
 

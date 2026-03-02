@@ -25,7 +25,8 @@ export const POSTS = [
   {
     slug: "isr-deep-dive",
     title: "ISR Deep Dive",
-    summary: "Stale-while-revalidate mechanics, tags, and on-demand invalidation.",
+    summary:
+      "Stale-while-revalidate mechanics, tags, and on-demand invalidation.",
     date: "2024-03-10",
   },
 ];
@@ -44,19 +45,33 @@ export default function PostsIndex({ posts }: Props) {
     <div>
       <h1>Posts — getStaticPaths demo</h1>
       <p style={{ fontSize: "0.85rem", color: "#555" }}>
-        Each post below is a dynamic route (<code>pages/pages-router/posts/[slug].tsx</code>).
-        Click through to see how <code>getStaticPaths</code> pre-renders dynamic paths.
+        Each post below is a dynamic route (
+        <code>pages/pages-router/posts/[slug].tsx</code>). Click through to see
+        how <code>getStaticPaths</code> pre-renders dynamic paths.
       </p>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {posts.map((post) => (
           <li
             key={post.slug}
-            style={{ marginBottom: "1rem", borderBottom: "1px solid #eee", paddingBottom: "1rem" }}
+            style={{
+              marginBottom: "1rem",
+              borderBottom: "1px solid #eee",
+              paddingBottom: "1rem",
+            }}
           >
-            <Link href={`/pages-router/posts/${post.slug}`} style={{ fontWeight: "bold" }}>
+            <Link
+              href={`/pages-router/posts/${post.slug}`}
+              style={{ fontWeight: "bold" }}
+            >
               {post.title}
             </Link>
-            <p style={{ margin: "0.25rem 0", fontSize: "0.85rem", color: "#555" }}>
+            <p
+              style={{
+                margin: "0.25rem 0",
+                fontSize: "0.85rem",
+                color: "#555",
+              }}
+            >
               {post.summary}
             </p>
             <small style={{ color: "#888" }}>{post.date}</small>
@@ -70,7 +85,8 @@ export default function PostsIndex({ posts }: Props) {
           /pages-router/posts/nonexistent
         </Link>{" "}
         — this path was not returned by <code>getStaticPaths</code>, so with{" "}
-        <code>fallback: &apos;blocking&apos;</code> it will generate on-demand and cache the 404.
+        <code>fallback: &apos;blocking&apos;</code> it will generate on-demand
+        and cache the 404.
       </p>
     </div>
   );

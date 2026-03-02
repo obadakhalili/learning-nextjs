@@ -24,7 +24,9 @@ type Props = {
   // In a real app: user data from a verified session cookie
 };
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+export const getServerSideProps: GetServerSideProps<Props> = async (
+  context,
+) => {
   const { req, res, query } = context;
   //       ^         ^
   //       |         res = Node.js ServerResponse
@@ -79,34 +81,57 @@ export default function SsrPage({
       >
         <strong>How this works:</strong>
         <p style={{ margin: "0.25rem 0 0" }}>
-          <code>getServerSideProps</code> ran on the server for <strong>this specific request</strong>.
-          Refresh the page — <code>requestTime</code> changes every time. Nothing is cached.
+          <code>getServerSideProps</code> ran on the server for{" "}
+          <strong>this specific request</strong>. Refresh the page —{" "}
+          <code>requestTime</code> changes every time. Nothing is cached.
         </p>
       </div>
 
       <h2>Request-time data</h2>
-      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.85rem" }}>
+      <table
+        style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          fontSize: "0.85rem",
+        }}
+      >
         <tbody>
           <tr>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold", whiteSpace: "nowrap" }}>
+            <td
+              style={{
+                padding: "0.25rem 0.5rem",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+              }}
+            >
               Request time
             </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>{requestTime}</td>
           </tr>
           <tr style={{ background: "#f9f9f9" }}>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>User-Agent</td>
-            <td style={{ padding: "0.25rem 0.5rem", wordBreak: "break-all" }}>{userAgent}</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              User-Agent
+            </td>
+            <td style={{ padding: "0.25rem 0.5rem", wordBreak: "break-all" }}>
+              {userAgent}
+            </td>
           </tr>
           <tr>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>Accept-Language</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              Accept-Language
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>{acceptLanguage}</td>
           </tr>
           <tr style={{ background: "#f9f9f9" }}>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>Cookies present</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              Cookies present
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>{cookieCount}</td>
           </tr>
           <tr>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>Query params</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              Query params
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>
               {Object.keys(query).length > 0 ? (
                 <pre style={{ margin: 0, fontSize: "0.75rem" }}>
@@ -126,39 +151,53 @@ export default function SsrPage({
 
       <h2>next/router in action</h2>
       <p style={{ fontSize: "0.85rem" }}>
-        In Pages Router, <code>useRouter()</code> from <code>next/router</code> provides
-        everything in one object. Compare to App Router where concerns are split into separate
-        hooks.
+        In Pages Router, <code>useRouter()</code> from <code>next/router</code>{" "}
+        provides everything in one object. Compare to App Router where concerns
+        are split into separate hooks.
       </p>
-      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: "0.8rem" }}>
+      <table
+        style={{
+          borderCollapse: "collapse",
+          width: "100%",
+          fontSize: "0.8rem",
+        }}
+      >
         <tbody>
           <tr>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>router.pathname</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              router.pathname
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>
               <code>{router.pathname}</code>
               <br />
               <small style={{ color: "#888" }}>
-                The file pattern, not the actual URL. Static in App Router equivalent:
-                usePathname()
+                The file pattern, not the actual URL. Static in App Router
+                equivalent: usePathname()
               </small>
             </td>
           </tr>
           <tr style={{ background: "#f9f9f9" }}>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>router.asPath</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              router.asPath
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>
               <code>{router.asPath}</code>
               <br />
-              <small style={{ color: "#888" }}>Actual URL including query string and hash</small>
+              <small style={{ color: "#888" }}>
+                Actual URL including query string and hash
+              </small>
             </td>
           </tr>
           <tr>
-            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>router.query</td>
+            <td style={{ padding: "0.25rem 0.5rem", fontWeight: "bold" }}>
+              router.query
+            </td>
             <td style={{ padding: "0.25rem 0.5rem" }}>
               <code>{JSON.stringify(router.query)}</code>
               <br />
               <small style={{ color: "#888" }}>
-                Route params AND query params mixed in one object. App Router keeps these separate
-                (useParams vs useSearchParams).
+                Route params AND query params mixed in one object. App Router
+                keeps these separate (useParams vs useSearchParams).
               </small>
             </td>
           </tr>
@@ -167,9 +206,10 @@ export default function SsrPage({
 
       <div style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
         <p>
-          Try adding query params to the URL:{" "}
-          <code>?name=alice&tab=2</code>. They appear in both <code>router.query</code> (client)
-          and <code>context.query</code> in <code>getServerSideProps</code> (server).
+          Try adding query params to the URL: <code>?name=alice&tab=2</code>.
+          They appear in both <code>router.query</code> (client) and{" "}
+          <code>context.query</code> in <code>getServerSideProps</code>{" "}
+          (server).
         </p>
       </div>
     </div>

@@ -59,7 +59,7 @@ export default function Page() {
 }
 
 // cart-modal.tsx
-"use client";
+("use client");
 export default function CartModal({ children }: { children: React.ReactNode }) {
   return <div className="modal">{children}</div>;
 }
@@ -110,8 +110,12 @@ The module graph is determined statically at build time from import chains. The 
 When you view the HTML source of a Next.js page, you see inline scripts like:
 
 ```html
-<script>self.__next_f.push([1, "...RSC payload chunk..."])</script>
-<script>self.__next_f.push([1, "...another chunk..."])</script>
+<script>
+  self.__next_f.push([1, "...RSC payload chunk..."]);
+</script>
+<script>
+  self.__next_f.push([1, "...another chunk..."]);
+</script>
 ```
 
 Why this pattern instead of just `<script>window.__payload = {...}</script>`?
@@ -264,13 +268,13 @@ On soft nav from gallery: `@modal/(..)photos/[id]/page.tsx` renders in the modal
 
 ## 10. Route Handlers vs Server Actions — The Precise Differences
 
-| Property | Route Handler | Server Action |
-|---|---|---|
-| HTTP method | Any (GET, POST, PUT, DELETE, PATCH, etc.) | Always POST |
-| Available at build time? | GET handlers CAN be statically cached (if no dynamic APIs used) | N/A (mutation-focused) |
-| Callable from | External systems, third parties, webhooks | Client components within the app |
-| Primary use case | Public API surface, webhooks, OAuth callbacks | Internal data mutations |
-| Request type | Normal HTTP | POST with `Next-Action` header |
+| Property                 | Route Handler                                                   | Server Action                    |
+| ------------------------ | --------------------------------------------------------------- | -------------------------------- |
+| HTTP method              | Any (GET, POST, PUT, DELETE, PATCH, etc.)                       | Always POST                      |
+| Available at build time? | GET handlers CAN be statically cached (if no dynamic APIs used) | N/A (mutation-focused)           |
+| Callable from            | External systems, third parties, webhooks                       | Client components within the app |
+| Primary use case         | Public API surface, webhooks, OAuth callbacks                   | Internal data mutations          |
+| Request type             | Normal HTTP                                                     | POST with `Next-Action` header   |
 
 The antipatterns:
 
@@ -342,10 +346,12 @@ export async function generateStaticParams() {
 Streaming works via **chunked transfer encoding** (`Transfer-Encoding: chunked` in HTTP/1.1, or streams in HTTP/2). The connection stays open and the server sends chunks as they become available, rather than buffering the entire response.
 
 When a Suspense boundary resolves on the server (the async component finishes its work), the server streams a new chunk that contains:
+
 1. The HTML for the resolved content.
 2. An **inline `<script>` tag** that swaps the fallback DOM node with the real content. This script executes in the browser as the chunk arrives, replacing the loading spinner in-place without a React re-render.
 
 The difference between streaming and prefetching:
+
 - **Streaming** = progressively deliver the current page as async parts resolve on the server, while the connection stays open.
 - **Prefetching** = speculatively load future pages (routes the user hasn't navigated to yet) while they're looking at the current page.
 
@@ -452,6 +458,7 @@ A navigation bar written as a client component (for `usePathname`) can be in the
 ### What forces a component into a dynamic hole
 
 A server component becomes a dynamic hole (must be Suspense-wrapped) when it accesses:
+
 - `cookies()`
 - `headers()`
 - `searchParams`
@@ -502,10 +509,12 @@ If you `await` the data in a server component, you have a resolved value. To sha
 Next.js prefetching has two levels, and the distinction matters:
 
 **Level 1 (default behavior, no configuration needed):**
+
 - Static routes: fully prefetched when their Link enters the viewport. The full RSC payload is cached in the Router Cache. Navigation is instant.
 - Dynamic routes: NOT fully prefetched, but also not entirely skipped. Next.js prefetches the shared layout segments up to the first `loading.tsx` boundary. So on click, the user sees the loading state immediately (from the cached layout + loading.tsx fallback) rather than a raw freeze waiting for the server.
 
 **Level 2 (with `cacheComponents`/PPR):**
+
 - Dynamic routes now have a precomputed static shell. Next.js prefetches this shell. On click, the user sees the actual static content of the page immediately, with dynamic holes showing their Suspense fallbacks while data loads. This is meaningfully better than just showing loading.tsx.
 
 The practical difference: without PPR, clicking a dynamic link shows your loading.tsx spinner immediately (not a blank freeze). With PPR, it shows the actual static parts of the destination page immediately, with spinners only where the dynamic content will go.
@@ -553,11 +562,13 @@ Trade-off: external image domains must be explicitly whitelisted in `next.config
 ## 23. ISR vs PPR — When Each Makes Sense
 
 ISR is better when:
+
 - The entire page can tolerate the same level of staleness.
 - There's no meaningful split between static and dynamic content.
 - Time-based or event-based regeneration of the whole page is acceptable.
 
 PPR is designed for when:
+
 - Part of the page is static (same for all users, cacheable forever) and part is dynamic (per-user, per-request).
 - You want to serve the static parts instantly from cache while the dynamic parts load.
 
@@ -635,4 +646,4 @@ Real-world use case: a dashboard with a filter sidebar and a data grid. Navigati
 
 ---
 
-*End of revision notes.*
+_End of revision notes._

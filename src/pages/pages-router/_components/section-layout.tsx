@@ -18,9 +18,24 @@ const pages = [
 
 export default function SectionLayout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ fontFamily: "monospace", display: "flex", gap: "2rem", padding: "1rem" }}>
-      <nav style={{ minWidth: 220, borderRight: "1px solid #ccc", paddingRight: "1rem" }}>
-        <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>Pages Router demos</p>
+    <div
+      style={{
+        fontFamily: "monospace",
+        display: "flex",
+        gap: "2rem",
+        padding: "1rem",
+      }}
+    >
+      <nav
+        style={{
+          minWidth: 220,
+          borderRight: "1px solid #ccc",
+          paddingRight: "1rem",
+        }}
+      >
+        <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
+          Pages Router demos
+        </p>
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {pages.map((p) => (
             <li key={p.href} style={{ marginBottom: "0.25rem" }}>
