@@ -1,7 +1,6 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 
 export function ProductsList({
   products,
