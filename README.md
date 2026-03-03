@@ -6,3 +6,4 @@
 - there is also other toturials in `./notes/deployment-architecture.md`, `./notes/high-traffic.md`, and `./notes/pages-router.md`
 - additionally, there is an `./notes/exam-1.md` file, which is generated and graded by Claude Code based on my notes and https://github.com/mrhrifat/nextjs-interview-questions
 - there is also a `./notes/revision-1.md` file, which covers the concepts i got wrong in exam-1
+- there is a `./notes/mock-interview-1.md` file, which is a simulated technical interview for a Next.js role at an e-commerce company
